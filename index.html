@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubb Trénink</title>
+
+  <!-- PWA meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2196f3">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Kubb Trénink</h1>
+    <nav>
+      <button id="mode8m">Režim: 8m</button>
+      <button id="mode8plus2">Režim: 8+2</button>
+      <button id="historyBtn">Historie</button>
+      <button id="statsBtn">Statistiky</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Sekce tréninku -->
+    <section id="training">
+      <div id="throwsLeft">Kolíky: <span id="throwsCount">6</span></div>
+
+      <label for="kubbCount">Shozeno kubbů:</label>
+      <input type="number" id="kubbCount" min="0" max="10" value="0">
+
+      <div id="kingContainer" style="display:none;">
+        <label><input type="checkbox" id="kingDown"> Shozen král</label>
+      </div>
+
+      <div class="controls">
+        <button id="saveResult">Uložit výsledek</button>
+        <button id="resetThrows">Reset kolíků</button>
+      </div>
+    </section>
+
+    <!-- Filtrace -->
+    <section id="filters">
+      <label for="filterType">Filtr typ tréninku:</label>
+      <select id="filterType">
+        <option value="all">Vše</option>
+        <option value="8m">8m</option>
+        <option value="8+2">8+2</option>
+      </select>
+
+      <label for="filterDate">Filtr od data:</label>
+      <input type="date" id="filterDate">
+
+      <button id="exportBtn">Exportovat data</button>
+      <input type="file" id="importFile" accept=".json" />
+    </section>
+
+    <!-- Sekce historie -->
+    <section id="historySection" style="display:none;">
+      <h2>Historie</h2>
+      <input type="text" id="searchHistory" placeholder="Hledat...">
+      <ul id="historyList"></ul>
+    </section>
+
+    <!-- Sekce statistik -->
+    <section id="statsSection" style="display:none;">
+      <h2>Statistiky</h2>
+      <canvas id="statsChart"></canvas>
+    </section>
+  </main>
+
+  <footer>
+    <p>Offline aplikace pro trénink Kubb | PWA</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
