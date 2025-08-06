@@ -71,12 +71,17 @@
   <div id="history-list">Vyber uživatele, abys viděl historii.</div>
 </section>
 
+<section style="margin-top: 2rem;">
+  <button id="undo-last-series-btn">Vrátit poslední sérii</button>
+  <div id="training-summary"></div>
+</section>
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('service-worker.js')
-        .then(reg => console.log('Service Worker registrován', reg))
-        .catch(err => console.log('Registrace Service Worker selhala', err));
+        .then(() => console.log('Service Worker registrován'))
+        .catch(err => console.error('Chyba při registraci SW:', err));
     });
   }
 
@@ -256,10 +261,14 @@
 
     historyDiv.innerHTML = '';
     user.history.slice().reverse().forEach(session => {
-      const date = new Date(session.date);
-      const container = document.createElement('div');
-      container.innerHTML = `<strong>${date.toLocaleString()}</strong><br> Série: ${session.training.length}, Celkem shozeno: ${session.training.reduce((acc, cur) => acc + cur.hit, 0)}, Celkem hodů: ${session.training.reduce((acc, cur) => acc + cur.throws, 0)}`;
-      historyDiv.appendChild(container);
+      const div = document.createElement('div');
+      const dateStr = new Date(session.date).toLocaleString();
+      let sumHits = session.training.reduce((acc, cur) => acc + cur.hit, 0);
+      let sumThrows = session.training.reduce((acc, cur) => acc + cur.throws, 0);
+      let success = sumThrows > 0 ? Math.round((sumHits / sumThrows) * 100) : 0;
+
+      div.textContent = `${dateStr} - Série: ${session.training.length}, Shozeno: ${sumHits}, Hodů: ${sumThrows}, Úspěšnost: ${success}%`;
+      historyDiv.appendChild(div);
     });
   }
 
@@ -267,7 +276,17 @@
     document.getElementById('history-list').innerHTML = 'Vyber uživatele, abys viděl historii.';
   }
 
+  document.getElementById('undo-last-series-btn').onclick = () => {
+    if (currentTraining.length === 0) {
+      alert('Žádná série k vrácení.');
+      return;
+    }
+    currentTraining.pop();
+    updateCurrentTrainingSummary();
+  };
+
   renderUserList();
 </script>
+
 </body>
 </html>
