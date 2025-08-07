@@ -1,123 +1,86 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  background: #f9f9f9;
-  color: #333;
-}
-
-header {
-  background: #2196f3;
-  color: white;
+  max-width: 600px;
+  margin: auto;
   padding: 1rem;
-  text-align: center;
+  background: #f0f8ff;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
+h1 {
+  color: #003366;
 }
 
-nav {
-  margin-top: 0.5rem;
+input,
+button {
+  padding: 0.4rem;
+  margin: 0.2rem 0;
+  font-size: 1rem;
 }
 
-nav button {
-  background: white;
-  color: #2196f3;
-  border: none;
-  padding: 0.5rem 1rem;
-  margin: 0.2rem;
-  border-radius: 5px;
-  font-size: 0.9rem;
+#user-list div {
+  margin-bottom: 0.3rem;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-nav button:hover {
-  background: #e3f2fd;
-}
-
-nav button.active {
-  background: #1976d2;
-  color: white;
-}
-
-main {
-  padding: 1rem;
-}
-
-@media (min-width: 600px) {
-  main {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-}
-
-section {
-  background: white;
+  background: #e6f0ff;
+  padding: 0.4rem;
   border-radius: 5px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#user-list button {
+  background: #cc0000;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+#history-list div {
+  background: #dde9f7;
+  margin: 0.3rem 0;
+  padding: 0.4rem;
+  border-radius: 5px;
+}
+
+.hit-btn {
+  background: #0074d9;
+  color: white;
+  border: none;
+  margin: 0 0.1rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.hit-btn.selected {
+  background: #0053a6;
 }
 
 label {
-  display: block;
-  margin-top: 0.5rem;
+  margin-right: 0.5rem;
 }
 
-input[type="number"],
-input[type="text"] {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-#kingContainer label {
-  cursor: pointer;
-  user-select: none;
-  font-weight: bold;
-  margin-top: 0.5rem;
-  display: inline-block;
-}
-
-.controls {
+#current-training-summary {
+  background: #d0e1ff;
+  padding: 0.6rem;
   margin-top: 1rem;
+  border-radius: 6px;
 }
 
-.controls button {
-  background: #2196f3;
-  color: white;
-  border: none;
-  padding: 0.6rem 1rem;
-  margin: 0.2rem;
-  border-radius: 5px;
+/* Verze cache v rohu */
+#cache-version {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #003366;
+  color: #fff;
+  padding: 0.3rem 0.6rem;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.controls button:hover {
-  background: #1976d2;
-}
-
-#historyList {
-  list-style: none;
-  padding: 0;
-}
-
-#historyList li {
-  padding: 0.4rem;
-  border-bottom: 1px solid #eee;
-  font-size: 0.9rem;
-}
-
-footer {
-  background: #eee;
-  padding: 0.5rem;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #666;
+  border-radius: 4px;
+  font-family: monospace;
+  opacity: 0.8;
+  user-select: none;
+  z-index: 1000;
 }
