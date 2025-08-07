@@ -1,71 +1,67 @@
-const CACHE_VERSION = 'kubb-tracker-cache-v3';  // nastav si verzi podle potřeby
-const CACHE_FILES = [
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
+const FILES_TO_CACHE = [
   '/',
   '/index.html',
   '/style.css',
   '/script.js',
-  '/favicon.ico',
-  // další soubory ke kešování, pokud máš
+  '/manifest.json',
+  '/service-worker.js',
+  // přidej další statické soubory pokud máš
 ];
 
-// Instalace SW a kešování souborů
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Instalace a kešování...');
+  console.log('[ServiceWorker] Instalace, cache:', CACHE_NAME);
   event.waitUntil(
-    caches.open(CACHE_VERSION).then(cache => {
-      return cache.addAll(CACHE_FILES);
-    }).then(() => {
-      // Ihned aktivovat SW bez čekání
-      return self.skipWaiting();
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[ServiceWorker] Přednačítám soubory');
+        return cache.addAll(FILES_TO_CACHE);
+      })
   );
+  self.skipWaiting();
 });
 
-// Aktivace SW - odstraň staré keše a pošli verzi do stránky
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Aktivace', CACHE_VERSION);
+  console.log('[ServiceWorker] Aktivace, mazání starých cache');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames
-          .filter(name => name.startsWith('kubb-tracker-cache-') && name !== CACHE_VERSION)
-          .map(name => caches.delete(name))
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME && cacheName.startsWith('kubb-cache-')) {
+            console.log('[ServiceWorker] Odstraňuji starou cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
       );
-    }).then(() => {
-      // Předat verzi cache všem klientům (otevřeným stránkám)
-      return self.clients.matchAll();
-    }).then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ type: 'CACHE_VERSION', version: CACHE_VERSION });
-      });
-    }).then(() => {
-      // Převzít kontrolu nad stránkami ihned
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Zachytávání fetch požadavků a obsluha z cache
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(resp => {
-      return resp || fetch(event.request).then(response => {
-        return caches.open(CACHE_VERSION).then(cache => {
-          cache.put(event.request, response.clone());
-          return response;
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then(networkResponse => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
         });
-      }).catch(() => {
-        // fallback pokud chceš (např. offline stránka)
+        return networkResponse;
       });
+    }).catch(() => {
+      // Můžeš sem dát fallback, např. obrázek offline nebo něco
     })
   );
 });
 
-// Poslech zpráv od stránky (např. skipWaiting)
 self.addEventListener('message', event => {
-  if (!event.data) return;
-
-  if (event.data.action === 'skipWaiting') {
+  if (event.data && event.data.action === 'skipWaiting') {
     self.skipWaiting();
   }
 });
