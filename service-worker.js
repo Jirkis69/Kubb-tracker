@@ -2,13 +2,13 @@ const CACHE_VERSION = 'v4';
 const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
 const FILES_TO_CACHE = [
   '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/manifest.json',
-  '/service-worker.js',
-  '/icon-192.png',
-  '/icon-512.png'
+  'index.html',
+  'style.css',
+  'script.js',
+  'manifest.json',
+  'service-worker.js',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 self.addEventListener('install', event => {
