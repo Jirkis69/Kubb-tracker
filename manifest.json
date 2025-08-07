@@ -1,10 +1,11 @@
 {
   "name": "Kubb Tracker",
-  "short_name": "Kubb",
+  "short_name": "KubbTracker",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f0f8ff",
   "theme_color": "#003366",
+  "description": "Sleduj své Kubb tréninky",
   "icons": [
     {
       "src": "icon-192.png",
