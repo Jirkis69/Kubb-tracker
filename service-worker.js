@@ -8,7 +8,7 @@ const FILES_TO_CACHE = [
   './manifest.json',
   './service-worker.js',
   './icon-192.png',
-  ./icon-512.png'
+  './icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -77,5 +77,6 @@ self.addEventListener('message', event => {
     self.skipWaiting();
   }
 });
+
 
 
