@@ -1,8 +1,28 @@
+// --- Service Worker registrace s automatickou aktualizací ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker registrován'))
-      .catch(err => console.error('Chyba při registraci SW:', err));
+    navigator.serviceWorker.register('service-worker.js').then(registration => {
+      console.log('[ServiceWorker] Registrace OK:', registration);
+
+      // Když je nalezena nová verze SW
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed') {
+              // Pokud už stránka používá SW a objeví se nová verze
+              if (navigator.serviceWorker.controller) {
+                console.log('[ServiceWorker] Nová verze dostupná – přepínám...');
+                newWorker.postMessage({ action: 'skipWaiting' });
+                window.location.reload();
+              }
+            }
+          });
+        }
+      });
+    }).catch(err => {
+      console.error('[ServiceWorker] Chyba při registraci SW:', err);
+    });
   });
 }
 
@@ -207,7 +227,7 @@ function renderHistory(userName) {
   });
 }
 
-// Vyčistí historii zobrazení (např. když není vybraný uživatel)
+// Vyčistí historii zobrazení
 function clearHistoryView() {
   document.getElementById('history-list').innerHTML = 'Vyber uživatele, abys viděl historii.';
 }
