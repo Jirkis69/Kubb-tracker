@@ -1,21 +1,20 @@
 // --- Service Worker registrace s automatickou aktualizací ---
+const CACHE_VERSION = 'v3';
+document.body.insertAdjacentHTML('beforeend', `<div id="cache-version">Cache verze: ${CACHE_VERSION}</div>`);
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').then(registration => {
       console.log('[ServiceWorker] Registrace OK:', registration);
 
-      // Když je nalezena nová verze SW
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed') {
-              // Pokud už stránka používá SW a objeví se nová verze
-              if (navigator.serviceWorker.controller) {
-                console.log('[ServiceWorker] Nová verze dostupná – přepínám...');
-                newWorker.postMessage({ action: 'skipWaiting' });
-                window.location.reload();
-              }
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[ServiceWorker] Nová verze dostupná – přepínám...');
+              newWorker.postMessage({ action: 'skipWaiting' });
+              window.location.reload();
             }
           });
         }
@@ -55,12 +54,9 @@ function renderUserList() {
     nameSpan.style.userSelect = 'none';
     nameSpan.style.cursor = 'pointer';
 
-    // Při kliknutí vybere uživatele
     nameSpan.onclick = () => {
       if (currentTraining.length > 0) {
-        if (!confirm('Probíhá aktuální trénink, opravdu chceš změnit uživatele? Aktuální trénink bude ztracen.')) {
-          return;
-        }
+        if (!confirm('Probíhá trénink. Opravdu přepnout uživatele?')) return;
         currentTraining = [];
         updateCurrentTrainingSummary();
         document.getElementById('current-training-summary').style.display = 'none';
@@ -71,12 +67,11 @@ function renderUserList() {
       resetThrowsInput();
     };
 
-    // Tlačítko smazat uživatele
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Smazat';
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
-      if (confirm(`Opravdu smazat uživatele "${user.name}"?`)) {
+      if (confirm(`Smazat uživatele "${user.name}"?`)) {
         users.splice(index, 1);
         saveUsers(users);
         renderUserList();
@@ -117,12 +112,12 @@ document.getElementById('add-user-btn').onclick = () => {
   renderUserList();
 };
 
-// Nastavení klikání na tlačítka "shozených kubbů"
+// Tlačítka pro počet shozených kubbů
 const hitButtons = document.querySelectorAll('.hit-btn');
 hitButtons.forEach(btn => {
   btn.onclick = () => {
     if (!currentUser) {
-      alert('Vyber nejdříve uživatele.');
+      alert('Nejdříve vyber uživatele.');
       return;
     }
     const selectedHits = parseInt(btn.getAttribute('data-value'));
@@ -130,41 +125,33 @@ hitButtons.forEach(btn => {
     let throws = parseInt(throwsInput.value);
     if (isNaN(throws) || throws < 1) throws = 6;
     if (throws > 6) throws = 6;
-
-    // Pokud je 5 shozeno, nastav hodů na 5
     if (selectedHits === 5 && throws !== 5) {
       throws = 5;
       throwsInput.value = 5;
     }
 
-    currentTraining.push({
-      hit: selectedHits,
-      throws: throws,
-      timestamp: new Date().toISOString()
-    });
+    currentTraining.push({ hit: selectedHits, throws, timestamp: new Date().toISOString() });
 
     updateCurrentTrainingSummary();
     resetThrowsInput();
 
-    // Označí vybrané tlačítko a zruší označení u ostatních
     hitButtons.forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
   };
 });
 
-// Reset hodnoty počtu hodů na 6
 function resetThrowsInput() {
-  const throwsInput = document.getElementById('throws-input');
-  throwsInput.value = 6;
+  document.getElementById('throws-input').value = 6;
 }
 
-// Aktualizuje zobrazení aktuálního tréninku
+// Zobrazení aktuálního tréninku
 function updateCurrentTrainingSummary() {
+  const summary = document.getElementById('current-training-summary');
   if (currentTraining.length === 0) {
-    document.getElementById('current-training-summary').style.display = 'none';
+    summary.style.display = 'none';
     return;
   }
-  document.getElementById('current-training-summary').style.display = 'block';
+  summary.style.display = 'block';
 
   const seriesCount = currentTraining.length;
   const totalHit = currentTraining.reduce((acc, cur) => acc + cur.hit, 0);
@@ -177,10 +164,10 @@ function updateCurrentTrainingSummary() {
   document.getElementById('success-rate').textContent = successRate;
 }
 
-// Ukončení tréninku - uloží trénink do historie uživatele
+// Uložení tréninku
 document.getElementById('end-training-btn').onclick = () => {
   if (!currentUser) {
-    alert('Vyber nejdříve uživatele.');
+    alert('Vyber uživatele.');
     return;
   }
   if (currentTraining.length === 0) {
@@ -190,13 +177,22 @@ document.getElementById('end-training-btn').onclick = () => {
   const users = loadUsers();
   const userIndex = users.findIndex(u => u.name === currentUser);
   if (userIndex === -1) {
-    alert('Uživatel nebyl nalezen.');
+    alert('Uživatel nenalezen.');
     return;
   }
+
+  const totalHit = currentTraining.reduce((acc, cur) => acc + cur.hit, 0);
+  const totalThrows = currentTraining.reduce((acc, cur) => acc + cur.throws, 0);
+  const successRate = totalThrows > 0 ? Math.round((totalHit / totalThrows) * 100) : 0;
+
   users[userIndex].history.push({
     date: new Date().toISOString(),
-    training: currentTraining
+    training: currentTraining,
+    totalHit,
+    totalThrows,
+    successRate
   });
+
   saveUsers(users);
   currentTraining = [];
   updateCurrentTrainingSummary();
@@ -204,7 +200,7 @@ document.getElementById('end-training-btn').onclick = () => {
   renderHistory(currentUser);
 };
 
-// Vykreslí historii tréninků pro zvoleného uživatele
+// Historie tréninků
 function renderHistory(userName) {
   const users = loadUsers();
   const user = users.find(u => u.name === userName);
@@ -218,21 +214,22 @@ function renderHistory(userName) {
   user.history.slice().reverse().forEach(session => {
     const div = document.createElement('div');
     const dateStr = new Date(session.date).toLocaleString();
-    let sumHits = session.training.reduce((acc, cur) => acc + cur.hit, 0);
-    let sumThrows = session.training.reduce((acc, cur) => acc + cur.throws, 0);
-    let success = sumThrows > 0 ? Math.round((sumHits / sumThrows) * 100) : 0;
+    div.textContent = `${dateStr} – Série: ${session.training.length}, Shozeno: ${session.totalHit}, Hodů: ${session.totalThrows}, Úspěšnost: ${session.successRate}%`;
 
-    div.textContent = `${dateStr} - Série: ${session.training.length}, Shozeno: ${sumHits}, Hodů: ${sumThrows}, Úspěšnost: ${success}%`;
+    // Klik pro podrobnosti
+    div.style.cursor = 'pointer';
+    div.onclick = () => {
+      alert(session.training.map((s, i) => `Série ${i + 1}: ${s.hit}/${s.throws}`).join('\n'));
+    };
+
     historyDiv.appendChild(div);
   });
 }
 
-// Vyčistí historii zobrazení
 function clearHistoryView() {
-  document.getElementById('history-list').innerHTML = 'Vyber uživatele, abys viděl historii.';
+  document.getElementById('history-list').innerHTML = 'Vyber uživatele pro zobrazení historie.';
 }
 
-// Vrátí poslední zaznamenanou sérii z aktuálního tréninku
 document.getElementById('undo-last-series-btn').onclick = () => {
   if (currentTraining.length === 0) {
     alert('Žádná série k vrácení.');
@@ -242,5 +239,4 @@ document.getElementById('undo-last-series-btn').onclick = () => {
   updateCurrentTrainingSummary();
 };
 
-// Načtení a vykreslení uživatelů při startu
 renderUserList();
