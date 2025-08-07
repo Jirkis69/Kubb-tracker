@@ -7,17 +7,29 @@ const FILES_TO_CACHE = [
   '/script.js',
   '/manifest.json',
   '/service-worker.js',
-  // přidej další statické soubory pokud máš
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
   console.log('[ServiceWorker] Instalace, cache:', CACHE_NAME);
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[ServiceWorker] Přednačítám soubory');
-        return cache.addAll(FILES_TO_CACHE);
-      })
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log('[ServiceWorker] Přednačítám soubory pomocí fetch(..., {cache: reload})');
+      const cachePromises = FILES_TO_CACHE.map(async (url) => {
+        try {
+          const response = await fetch(url, { cache: 'reload' });
+          if (response.ok) {
+            await cache.put(url, response.clone());
+          } else {
+            console.warn(`[ServiceWorker] Nelze fetchnout: ${url}`, response.status);
+          }
+        } catch (err) {
+          console.error(`[ServiceWorker] Chyba při fetchu ${url}:`, err);
+        }
+      });
+      return Promise.all(cachePromises);
+    })
   );
   self.skipWaiting();
 });
@@ -55,7 +67,7 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       });
     }).catch(() => {
-      // Můžeš sem dát fallback, např. obrázek offline nebo něco
+      // Zde lze přidat fallback, například offline stránku nebo placeholder obrázek
     })
   );
 });
