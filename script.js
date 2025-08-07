@@ -13,8 +13,12 @@ if ('serviceWorker' in navigator) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               console.log('[ServiceWorker] Nová verze dostupná – přepínám...');
-              newWorker.postMessage({ action: 'skipWaiting' });
-              window.location.reload();
+                newWorker.postMessage({ action: 'skipWaiting' });
+
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('[ServiceWorker] Aktivní nová verze – obnovuji stránku');
+                window.location.reload();
+      });
             }
           });
         }
@@ -245,5 +249,6 @@ document.getElementById('undo-last-series-btn').onclick = () => {
 };
 
 renderUserList();
+
 
 
