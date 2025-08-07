@@ -44,7 +44,12 @@
   <div style="margin-top: 1rem;">
     <label for="throws-input">Počet hodů (výchozí 6):</label>
     <input type="number" id="throws-input" min="1" max="6" value="6" style="width: 50px;" />
+
   </div>
+<section style="margin-top: 2rem;">
+  <button id="undo-last-series-btn">Vrátit poslední sérii</button>
+  <div id="training-summary"></div>
+</section>
 
   <button id="end-training-btn" style="margin-top: 1rem; background:#cc3300; color:#fff;">Ukončit trénink</button>
 
@@ -60,11 +65,6 @@
 <section style="margin-top: 2rem;">
   <h2>Historie</h2>
   <div id="history-list">Vyber uživatele, abys viděl historii.</div>
-</section>
-
-<section style="margin-top: 2rem;">
-  <button id="undo-last-series-btn">Vrátit poslední sérii</button>
-  <div id="training-summary"></div>
 </section>
 
 <!-- Nový element pro zobrazení verze cache -->
