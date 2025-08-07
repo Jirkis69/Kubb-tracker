@@ -1,7 +1,7 @@
 const CACHE_VERSION = 'v5';
 const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
 const FILES_TO_CACHE = [
-  '/',
+  './',
   'index.html',
   'style.css',
   'script.js',
@@ -12,37 +12,37 @@ const FILES_TO_CACHE = [
 ];
 
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Instalace, cache:', CACHE_NAME);
+  console.log('[ServiceWorker] Instalace – cache:', CACHE_NAME);
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[ServiceWorker] Přednačítám soubory pomocí fetch(..., {cache: reload})');
+      console.log('[ServiceWorker] Přednačítám soubory s cache: reload');
       const cachePromises = FILES_TO_CACHE.map(async (url) => {
         try {
           const response = await fetch(url, { cache: 'reload' });
           if (response.ok) {
             await cache.put(url, response.clone());
+            console.log(`[ServiceWorker] Cached: ${url}`);
           } else {
-            console.warn(`[ServiceWorker] Nelze fetchnout: ${url}`, response.status);
+            console.warn(`[ServiceWorker] Nelze načíst ${url}`, response.status);
           }
         } catch (err) {
-          console.error(`[ServiceWorker] Chyba při fetchu ${url}:`, err);
+          console.error(`[ServiceWorker] Chyba při načítání ${url}:`, err);
         }
       });
       return Promise.all(cachePromises);
-    })
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Aktivace, mazání starých cache');
+  console.log('[ServiceWorker] Aktivace – mazání starých cache');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName.startsWith('kubb-cache-')) {
-            console.log('[ServiceWorker] Odstraňuji starou cache:', cacheName);
-            return caches.delete(cacheName);
+        cacheNames.map(name => {
+          if (name !== CACHE_NAME && name.startsWith('kubb-cache-')) {
+            console.log('[ServiceWorker] Mažu starou cache:', name);
+            return caches.delete(name);
           }
         })
       );
@@ -67,7 +67,7 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       });
     }).catch(() => {
-      // Zde lze přidat fallback, například offline stránku nebo placeholder obrázek
+      // Volitelný fallback
     })
   );
 });
@@ -77,4 +77,3 @@ self.addEventListener('message', event => {
     self.skipWaiting();
   }
 });
-
