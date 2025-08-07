@@ -1,5 +1,5 @@
 // --- Service Worker registrace s automatickou aktualizací ---
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 document.body.insertAdjacentHTML('beforeend', `<div id="cache-version">Cache verze: ${CACHE_VERSION}</div>`);
 
 if ('serviceWorker' in navigator) {
@@ -245,4 +245,5 @@ document.getElementById('undo-last-series-btn').onclick = () => {
 };
 
 renderUserList();
+
 
