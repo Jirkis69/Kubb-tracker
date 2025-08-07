@@ -1,5 +1,5 @@
 // --- Service Worker registrace s automatickou aktualizací ---
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 document.body.insertAdjacentHTML('beforeend', `<div id="cache-version">Cache verze: ${CACHE_VERSION}</div>`);
 
 if ('serviceWorker' in navigator) {
@@ -119,16 +119,21 @@ hitButtons.forEach(btn => {
     if (!currentUser) {
       alert('Nejdříve vyber uživatele.');
       return;
-    }
-    const selectedHits = parseInt(btn.getAttribute('data-value'));
-    let throwsInput = document.getElementById('throws-input');
-    let throws = parseInt(throwsInput.value);
-    if (isNaN(throws) || throws < 1) throws = 6;
-    if (throws > 6) throws = 6;
-    if (selectedHits === 5 && throws !== 5) {
-      throws = 5;
-      throwsInput.value = 5;
-    }
+}
+
+const selectedHits = parseInt(btn.getAttribute('data-value'));
+let throwsInput = document.getElementById('throws-input');
+let throws = parseInt(throwsInput.value);
+
+if (isNaN(throws) || throws < 1) {
+  throws = 6;
+  throwsInput.value = 6;
+}
+if (throws > 6) {
+  throws = 6;
+  throwsInput.value = 6;
+}
+
 
     currentTraining.push({ hit: selectedHits, throws, timestamp: new Date().toISOString() });
 
