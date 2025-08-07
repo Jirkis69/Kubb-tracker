@@ -1,7 +1,7 @@
 {
-  "name": "Kubb Tracker v3",
-  "short_name": "KubbTracker v3",
-  "start_url": "/?v=3",
+  "name": "Kubb Tracker v4",
+  "short_name": "KubbTracker v4",
+  "start_url": "/?v=4",
   "display": "standalone",
   "background_color": "#f0f8ff",
   "theme_color": "#003366",
