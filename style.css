@@ -1,13 +1,24 @@
 body {
   font-family: Arial, sans-serif;
-  max-width: 600px;
+  max-width: 640px;
   margin: auto;
   padding: 1rem;
-  background: #f0f8ff;
+  background: #f1f8e9; /* jemné olivové pozadí */
+  color: #222;
 }
 
 h1 {
   color: #003366;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+section {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 51, 102, 0.1);
+  padding: 1rem;
+  margin-bottom: 2rem;
 }
 
 input,
@@ -15,21 +26,30 @@ button {
   padding: 0.4rem;
   margin: 0.2rem 0;
   font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #bbb;
+}
+
+input:focus {
+  outline: none;
+  border-color: #66bb6a;
+  box-shadow: 0 0 4px #66bb6a88;
 }
 
 #user-list div {
   margin-bottom: 0.3rem;
   cursor: pointer;
-  background: #e6f0ff;
+  background: #e6f4ea;
   padding: 0.4rem;
   border-radius: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid #c5e1a5;
 }
 
 #user-list button {
-  background: #cc0000;
+  background: #c62828;
   color: white;
   border: none;
   border-radius: 3px;
@@ -38,35 +58,81 @@ button {
 }
 
 #history-list div {
-  background: #dde9f7;
-  margin: 0.3rem 0;
-  padding: 0.4rem;
-  border-radius: 5px;
+  background: #f0f4c3;
+  margin: 0.4rem 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 4px solid #9ccc65;
+  transition: background 0.2s;
+}
+
+#history-list div:hover {
+  background: #e6ee9c;
 }
 
 .hit-btn {
-  background: #0074d9;
+  background: #388e3c;
   color: white;
   border: none;
   margin: 0 0.1rem;
   padding: 0.5rem 0.8rem;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.hit-btn:hover {
+  background: #2e7d32;
 }
 
 .hit-btn.selected {
-  background: #0053a6;
+  background: #1b5e20;
 }
 
 label {
   margin-right: 0.5rem;
 }
 
+#throws-input {
+  text-align: center;
+  width: 50px;
+}
+
 #current-training-summary {
-  background: #d0e1ff;
-  padding: 0.6rem;
+  background: #dcedc8;
+  padding: 0.8rem;
   margin-top: 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid #aed581;
+}
+
+#undo-last-series-btn {
+  background: #fdd835;
+  color: #000;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+#undo-last-series-btn:hover {
+  background: #fbc02d;
+}
+
+#end-training-btn {
+  background: #cc3300;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#end-training-btn:hover {
+  background: #b22200;
 }
 
 /* Verze cache v rohu */
