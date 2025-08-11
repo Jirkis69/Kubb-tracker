@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
   <title>Kubb Tracker</title>
 
   <!-- GitHub Pages: správná adresa aplikace -->
@@ -22,61 +21,65 @@
 </head>
 
 <body>
+  <div id="app-container">
 
-<h1>Kubb Tracker</h1>
+    <header>
+      <div style="text-align: center; margin-bottom: 2rem; background: #eef4ec; padding: 1rem; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+        <img src="icon-512.png" alt="Kubb Tracker logo" style="width: 160px; height: auto; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
+      </div>
+    </header>
 
-<section>
-  <h2>Uživatelé</h2>
-  <input type="text" id="user-name-input" placeholder="Jméno uživatele" />
-  <button id="add-user-btn">Přidat uživatele</button>
-  <div id="user-list"></div>
-</section>
+    <section class="section-box">
+      <h2>Uživatelé</h2>
+      <input type="text" id="user-name-input" placeholder="Jméno uživatele" />
+      <button id="add-user-btn">Přidat uživatele</button>
+      <div id="user-list"></div>
+    </section>
 
-<section style="margin-top: 2rem;">
-  <h2>Trénink - <span id="current-user-name">žádný</span></h2>
+    <section class="section-box">
+      <h2>Trénink – <span id="current-user-name">žádný</span></h2>
 
-  <div>
-    <label>Vyber shozených kubbů (kliknutím se uloží série):</label><br />
-    <div id="hit-buttons">
-      <button class="hit-btn" data-value="0">0</button>
-      <button class="hit-btn" data-value="1">1</button>
-      <button class="hit-btn" data-value="2">2</button>
-      <button class="hit-btn" data-value="3">3</button>
-      <button class="hit-btn" data-value="4">4</button>
-      <button class="hit-btn" data-value="5">5</button>
-    </div>
+      <button id="undo-last-series-btn">↩️ Vrátit poslední sérii</button>
+
+      <div>
+        <label>Vyber shozených kubbů (kliknutím se uloží série):</label><br />
+        <div id="hit-buttons">
+          <button class="hit-btn" data-value="0">0</button>
+          <button class="hit-btn" data-value="1">1</button>
+          <button class="hit-btn" data-value="2">2</button>
+          <button class="hit-btn" data-value="3">3</button>
+          <button class="hit-btn" data-value="4">4</button>
+          <button class="hit-btn" data-value="5">5</button>
+        </div>
+      </div>
+
+      <div>
+        <label for="throws-input">Počet hodů (výchozí 6):</label>
+        <input type="number" id="throws-input" min="1" max="6" value="6" style="width: 50px;" />
+      </div>
+
+      <button id="end-training-btn" class="danger-button">Ukončit trénink</button>
+
+      <div id="current-training-summary" style="display:none;">
+        <strong>Aktuální trénink:</strong><br />
+        Série: <span id="series-count">0</span><br />
+        Celkem shozeno kubbů: <span id="total-hit">0</span><br />
+        Celkem hodů: <span id="total-throws">0</span><br />
+        Úspěšnost: <span id="success-rate">0</span>%
+      </div>
+
+      <div id="training-summary"></div>
+    </section>
+
+    <section class="section-box">
+      <h2>Historie</h2>
+      <div id="history-list">Vyber uživatele, abys viděl historii.</div>
+    </section>
+
+    <!-- Zobrazení verze cache -->
+    <div id="cache-version">Cache verze: -</div>
   </div>
 
-  <div style="margin-top: 1rem;">
-    <label for="throws-input">Počet hodů (výchozí 6):</label>
-    <input type="number" id="throws-input" min="1" max="6" value="6" style="width: 50px;" />
-
-  </div>
-<section style="margin-top: 2rem;">
-  <button id="undo-last-series-btn">Vrátit poslední sérii</button>
-  <div id="training-summary"></div>
-</section>
-
-  <button id="end-training-btn" style="margin-top: 1rem; background:#cc3300; color:#fff;">Ukončit trénink</button>
-
-  <div id="current-training-summary" style="display:none;">
-    <strong>Aktuální trénink:</strong><br />
-    Série: <span id="series-count">0</span><br />
-    Celkem shozeno kubbů: <span id="total-hit">0</span><br />
-    Celkem hodů: <span id="total-throws">0</span><br />
-    Úspěšnost: <span id="success-rate">0</span>%
-  </div>
-</section>
-
-<section style="margin-top: 2rem;">
-  <h2>Historie</h2>
-  <div id="history-list">Vyber uživatele, abys viděl historii.</div>
-</section>
-
-<!-- Nový element pro zobrazení verze cache -->
-<div id="cache-version">Cache verze: -</div>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
-
