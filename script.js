@@ -1,5 +1,5 @@
 // --- Service Worker registrace s automatickou aktualizací ---
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 document.body.insertAdjacentHTML('beforeend', `<div id="cache-version">Cache verze: ${CACHE_VERSION}</div>`);
 
 if ('serviceWorker' in navigator) {
