@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v8'; // Zvýšeno z v4
+const CACHE_VERSION = 'v9'; //
 const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
 const FILES_TO_CACHE = [
   './',
