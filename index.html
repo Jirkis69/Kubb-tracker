@@ -21,10 +21,13 @@
 </head>
 
 <body>
+  <!-- Tenký progress bar -->
+  <div id="top-progress" aria-hidden="true"></div>
+
   <div id="app-container">
 
     <header>
-      <div style="text-align: center; margin-bottom: 2rem; background: #eef4ec; padding: 1rem; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,.08);">
+      <div style="text-align: center; margin-bottom: 2rem; background: #eef6ff; padding: 1rem; border-radius: 18px; box-shadow: 0 6px 20px rgba(20,53,97,.10); border:1px solid #e6eef7;">
         <img src="icon-512.png" alt="Kubb Tracker logo" style="width: 175px; height: auto;" />
       </div>
     </header>
@@ -33,7 +36,7 @@
     <section class="section-box">
       <h2>Uživatelé</h2>
       <input type="text" id="user-name-input" placeholder="Jméno uživatele" />
-      <button id="add-user-btn">Přidat uživatele</button>
+      <button id="add-user-btn" class="ripple">Přidat uživatele</button>
       <div id="user-list"></div>
     </section>
 
@@ -55,17 +58,17 @@
 
       <!-- ===== Režim 8m ===== -->
       <div id="mode-8m">
-        <button id="undo-last-series-btn">↩️ Vrátit poslední sérii</button>
+        <button id="undo-last-series-btn" class="ripple">↩️ Vrátit poslední sérii</button>
 
         <div>
           <label>Vyber shozených kubbů (kliknutím se uloží série):</label><br />
           <div id="hit-buttons">
-            <button class="hit-btn" data-value="0">0</button>
-            <button class="hit-btn" data-value="1">1</button>
-            <button class="hit-btn" data-value="2">2</button>
-            <button class="hit-btn" data-value="3">3</button>
-            <button class="hit-btn" data-value="4">4</button>
-            <button class="hit-btn" data-value="5">5</button>
+            <button class="hit-btn ripple" data-value="0">0</button>
+            <button class="hit-btn ripple" data-value="1">1</button>
+            <button class="hit-btn ripple" data-value="2">2</button>
+            <button class="hit-btn ripple" data-value="3">3</button>
+            <button class="hit-btn ripple" data-value="4">4</button>
+            <button class="hit-btn ripple" data-value="5">5</button>
           </div>
         </div>
 
@@ -74,7 +77,7 @@
           <input type="number" id="throws-input" min="1" max="6" value="6" style="width: 50px;" />
         </div>
 
-        <button id="end-training-btn" class="danger-button">Ukončit trénink</button>
+        <button id="end-training-btn" class="danger-button ripple">Ukončit trénink</button>
 
         <div id="current-training-summary" style="display:none;">
           <strong>Aktuální trénink:</strong><br />
@@ -113,17 +116,17 @@
           </div>
 
           <div id="m82-classic-chips" style="display:flex; flex-wrap:wrap; gap:.4rem;">
-            <button class="hit-btn m82c-chip" data-kubb="0">0</button>
-            <button class="hit-btn m82c-chip" data-kubb="1">1</button>
-            <button class="hit-btn m82c-chip" data-kubb="2">2</button>
-            <button class="hit-btn m82c-chip" data-kubb="3">3</button>
-            <button class="hit-btn m82c-chip" data-kubb="4">4</button>
-            <button class="hit-btn m82c-chip" data-kubb="5">5</button>
-            <button class="hit-btn m82c-chip" data-kubb="6">6</button>
-            <button class="hit-btn m82c-chip" data-kubb="7">7</button>
-            <button class="hit-btn m82c-chip" data-kubb="8">8</button>
-            <button class="hit-btn m82c-chip" data-kubb="9">9</button>
-            <button class="hit-btn m82c-chip" data-kubb="10">10</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="0">0</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="1">1</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="2">2</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="3">3</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="4">4</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="5">5</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="6">6</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="7">7</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="8">8</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="9">9</button>
+            <button class="hit-btn m82c-chip ripple" data-kubb="10">10</button>
           </div>
         </div>
 
@@ -131,8 +134,8 @@
         <div id="m82-unlimited" style="display:none; margin-top:.5rem;">
           <label for="m82-unl-pins"><em>Kolik kolíků celkem bylo potřeba na shození všech 11 (10 kubbů + král)?</em></label>
           <select id="m82-unl-pins" style="margin-left:.5rem;"></select>
-          <button id="m82-unl-save" class="hit-btn" style="margin-left:.5rem;">Uložit</button>
-          <button id="m82-unl-dnf" class="danger-button" style="margin-left:.25rem;">DNF</button>
+          <button id="m82-unl-save" class="hit-btn ripple" style="margin-left:.5rem;">Uložit</button>
+          <button id="m82-unl-dnf" class="danger-button ripple" style="margin-left:.25rem;">DNF</button>
         </div>
 
         <div style="margin-top:.6rem; font-size:.95rem; opacity:.85;">
@@ -141,22 +144,22 @@
       </div>
     </section>
 
-    <!-- Historie – náhled + tlačítko + Export/Import -->
+    <!-- Historie – náhled + tlačítka Export/Import -->
     <section class="section-box">
       <h2>Historie</h2>
 
       <div id="history-preview" class="history-preview">Vyber uživatele, abys viděl poslední záznam.</div>
 
-      <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-top:.6rem;">
-        <button id="open-history-btn">Otevřít celou historii</button>
+      <div class="history-actions">
+        <button id="open-history-btn" class="btn-nowrap ripple">Otevřít celou historii</button>
 
-        <span style="margin-left:auto;"></span>
+        <span class="flex-spacer"></span>
 
-        <button id="export-all-btn" title="Export všech uživatelů">Export vše</button>
-        <button id="export-current-btn" title="Export jen aktuálního uživatele">Export aktuální</button>
+        <button id="export-all-btn" class="btn-nowrap ripple" title="Export všech uživatelů">Export vše</button>
+        <button id="export-current-btn" class="btn-nowrap ripple" title="Export aktuálního uživatele">Export akt.</button>
 
         <input type="file" id="import-file" accept="application/json" style="display:none;">
-        <button id="import-btn" title="Import JSON (sloučení)">Import (JSON)</button>
+        <button id="import-btn" class="btn-nowrap ripple" title="Import JSON (sloučení)">Import</button>
       </div>
     </section>
 
@@ -165,9 +168,9 @@
       <h2 style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
         Přehledové statistiky
         <span class="seg">
-          <button class="seg-btn active" data-range="7d">7 dní</button>
-          <button class="seg-btn" data-range="30d">30 dní</button>
-          <button class="seg-btn" data-range="all">Celkem</button>
+          <button class="seg-btn active ripple" data-range="7d">7 dní</button>
+          <button class="seg-btn ripple" data-range="30d">30 dní</button>
+          <button class="seg-btn ripple" data-range="all">Celkem</button>
         </span>
       </h2>
       <div id="stats">
@@ -189,7 +192,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-header">
         <h3>Historie – <span id="history-modal-user">—</span></h3>
-        <button class="modal-close" data-dismiss="history-modal" aria-label="Zavřít">✖</button>
+        <button class="modal-close ripple" data-dismiss="history-modal" aria-label="Zavřít">✖</button>
       </div>
       <div class="modal-toolbar">
         <label>Filtrovat:</label>
@@ -210,7 +213,7 @@
       <div id="history-list" class="modal-body">Načítám…</div>
       <div class="modal-footer">
         <span id="history-info" class="muted"></span>
-        <button id="history-load-more">Načíst starší</button>
+        <button id="history-load-more" class="ripple">Načíst starší</button>
       </div>
     </div>
   </div>
