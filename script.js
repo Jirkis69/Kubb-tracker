@@ -1,5 +1,5 @@
 // --- Service Worker badge (jen info) ---
-const CACHE_VERSION = 'v1.02';
+const CACHE_VERSION = 'v1.03';
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('cache-version');
   if (badge) badge.textContent = `Cache verze: ${CACHE_VERSION}`;
