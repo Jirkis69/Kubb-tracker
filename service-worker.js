@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v9'; //
+const CACHE_VERSION = 'v1.02';
 const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
 const FILES_TO_CACHE = [
   './',
@@ -77,7 +77,3 @@ self.addEventListener('message', event => {
     self.skipWaiting();
   }
 });
-
-
-
-

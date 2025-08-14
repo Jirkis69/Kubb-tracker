@@ -57,6 +57,15 @@ input:focus {
   cursor: pointer;
 }
 
+/* Krátký náhled historie */
+.history-preview {
+  background: #f0f4c3;
+  padding: .6rem .7rem;
+  border-left: 4px solid #9ccc65;
+  border-radius: 6px;
+}
+
+/* Historie (v modalu) */
 #history-list div {
   background: #f0f4c3;
   margin: 0.4rem 0;
@@ -65,10 +74,7 @@ input:focus {
   border-left: 4px solid #9ccc65;
   transition: background 0.2s;
 }
-
-#history-list div:hover {
-  background: #e6ee9c;
-}
+#history-list div:hover { background: #e6ee9c; }
 
 .hit-btn {
   background: #388e3c;
@@ -80,19 +86,12 @@ input:focus {
   cursor: pointer;
   font-weight: bold;
   transition: background 0.2s;
+  filter: contrast(1.03);
 }
+.hit-btn:hover { background: #2e7d32; }
+.hit-btn.selected { background: #1b5e20; }
 
-.hit-btn:hover {
-  background: #2e7d32;
-}
-
-.hit-btn.selected {
-  background: #1b5e20;
-}
-
-label {
-  margin-right: 0.5rem;
-}
+label { margin-right: 0.5rem; }
 
 #throws-input {
   text-align: center;
@@ -116,10 +115,7 @@ label {
   cursor: pointer;
   margin-bottom: 1rem;
 }
-
-#undo-last-series-btn:hover {
-  background: #fbc02d;
-}
+#undo-last-series-btn:hover { background: #fbc02d; }
 
 #end-training-btn {
   background: #cc3300;
@@ -129,11 +125,9 @@ label {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  filter: saturate(1.05) contrast(1.05);
 }
-
-#end-training-btn:hover {
-  background: #b22200;
-}
+#end-training-btn:hover { background: #b22200; }
 
 /* Verze cache v rohu */
 #cache-version {
@@ -149,4 +143,108 @@ label {
   opacity: 0.8;
   user-select: none;
   z-index: 1000;
+}
+
+/* ===== Karty statistik ===== */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .75rem;
+}
+@media (min-width: 560px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #dfe8cc;
+  border-radius: 10px;
+  padding: .8rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.stat-card h3 {
+  margin: 0 0 .25rem;
+  font-size: 1.05rem;
+  color: #2b4a2e;
+}
+.stat-row { display:flex; justify-content:space-between; margin:.15rem 0; }
+.stat-key { opacity:.8; }
+.trend-up { color: #2e7d32; font-weight: 600; }
+.trend-down { color: #c62828; font-weight: 600; }
+
+/* ===== Toast ===== */
+#toast-container {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.toast {
+  background: #003366;
+  color: #fff;
+  padding: .6rem .9rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  font-size: .95rem;
+  max-width: 90vw;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: .95; transform: translateY(0); }
+
+/* ===== Sparkline ===== */
+.sparkline { margin-top: .35rem; }
+.sparkline svg { width: 100%; height: 40px; display: block; }
+
+/* ===== Modal ===== */
+.modal { position: fixed; inset: 0; display: none; z-index: 1500; }
+.modal.show { display: block; }
+.modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.35);
+}
+.modal-dialog {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(680px, 92vw);
+  max-height: 88vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.25);
+  display: flex; flex-direction: column;
+}
+.modal-header, .modal-footer, .modal-toolbar {
+  padding: .75rem .9rem;
+  border-bottom: 1px solid #e8eddc;
+}
+.modal-footer { border-top: 1px solid #e8eddc; border-bottom: none; display:flex; justify-content: space-between; align-items: center; }
+.modal-toolbar { display:flex; gap:.6rem; align-items:center; }
+.modal-header { display:flex; justify-content: space-between; align-items:center; }
+.modal-body { padding: .75rem .9rem; overflow: auto; }
+.modal-close { background:#c62828; color:#fff; border:none; border-radius:8px; padding:.3rem .6rem; cursor:pointer; }
+.muted { opacity:.7; }
+
+/* ===== Segmented control (7 dní / 30 dní / Celkem) ===== */
+.seg {
+  display: inline-flex;
+  border: 1px solid #cdd8b7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.seg-btn {
+  background: #fff;
+  border: none;
+  padding: .25rem .6rem;
+  cursor: pointer;
+  font-size: .9rem;
+}
+.seg-btn:not(.active):hover { background: #eef5e2; }
+.seg-btn.active {
+  background: #d9e6c2;
+  font-weight: 600;
 }
