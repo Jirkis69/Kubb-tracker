@@ -144,19 +144,22 @@
       </div>
     </section>
 
-    <!-- Historie – náhled + tlačítka Export/Import -->
+    <!-- Historie – náhled + tlačítka (upravené popisky) -->
     <section class="section-box">
       <h2>Historie</h2>
 
-      <div id="history-preview" class="history-preview">Vyber uživatele, abys viděl poslední záznam.</div>
+      <div id="history-preview" class="history-preview">
+        Vyber uživatele, abys viděl poslední záznam.
+      </div>
 
       <div class="history-actions">
-        <button id="open-history-btn" class="btn-nowrap ripple">Otevřít celou historii</button>
+        <!-- kratší popisky, lépe se vejdou na mobilu -->
+        <button id="open-history-btn" class="btn-nowrap ripple" title="Otevřít celou historii">Historie</button>
 
         <span class="flex-spacer"></span>
 
-        <button id="export-all-btn" class="btn-nowrap ripple" title="Export všech uživatelů">Export vše</button>
-        <button id="export-current-btn" class="btn-nowrap ripple" title="Export aktuálního uživatele">Export akt.</button>
+        <button id="export-all-btn" class="btn-nowrap ripple" title="Export všech uživatelů">Exp vše</button>
+        <button id="export-current-btn" class="btn-nowrap ripple" title="Export aktuálního uživatele">Exp akt.</button>
 
         <input type="file" id="import-file" accept="application/json" style="display:none;">
         <button id="import-btn" class="btn-nowrap ripple" title="Import JSON (sloučení)">Import</button>

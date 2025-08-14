@@ -248,3 +248,26 @@ button, .hit-btn{ position: relative; overflow: hidden; }
   opacity: 0;
 }
 #top-progress.active{ opacity: 1; }
+
+/* --- Mobilní úpravy řádku s akcemi historie --- */
+.history-actions {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  /* dovolíme zalomení na malých displejích */
+  flex-wrap: wrap;
+}
+
+/* tlačítka a rozestupy, aby se nevešla „na sílu“ na jeden řádek */
+@media (max-width: 420px) {
+  .history-actions .flex-spacer {
+    display: none; /* zbytečně neroztahuje řadu na malých šířkách */
+  }
+  .history-actions button {
+    flex: 1 1 auto;      /* ať si vezmou dostupnou šířku, klidně na 2 řádky */
+    min-width: 0;        /* zabrání usekávání obsahu */
+    font-size: .95rem;   /* o chlup menší písmo */
+    padding: .48rem .6rem;
+  }
+  .btn-nowrap { white-space: nowrap; } /* text se neláme uvnitř tlačítka, ale tlačítko se zalomí na další řádek */
+}
