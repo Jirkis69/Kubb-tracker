@@ -7,21 +7,14 @@
   <meta http-equiv="Expires" content="0" />
   <title>Kubb Tracker</title>
 
-  <!-- GitHub Pages: správná adresa aplikace -->
   <link rel="canonical" href="https://jirkis69.github.io/Kubb-tracker/" />
-
-  <!-- Barva adresního řádku v mobilu -->
   <meta name="theme-color" content="#003366" />
-
-  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json" />
-
-  <!-- Styl -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <!-- Tenký progress bar -->
+  <!-- Top progress bar -->
   <div id="top-progress" aria-hidden="true"></div>
 
   <div id="app-container">
@@ -44,19 +37,16 @@
     <section class="section-box">
       <h2>Trénink – <span id="current-user-name">žádný</span></h2>
 
-      <!-- Přepínač hlavního režimu -->
       <div style="margin:.5rem 0 1rem;">
         <label style="margin-right:1rem;">
-          <input type="radio" name="mode" value="8m" id="mode-8m-radio" checked>
-          Režim 8m
+          <input type="radio" name="mode" value="8m" id="mode-8m-radio" checked> Režim 8m
         </label>
         <label>
-          <input type="radio" name="mode" value="8+2" id="mode-82-radio">
-          Režim 8+2
+          <input type="radio" name="mode" value="8+2" id="mode-82-radio"> Režim 8+2
         </label>
       </div>
 
-      <!-- ===== Režim 8m ===== -->
+      <!-- 8m -->
       <div id="mode-8m">
         <button id="undo-last-series-btn" class="ripple">↩️ Vrátit poslední sérii</button>
 
@@ -90,25 +80,22 @@
         <div id="training-summary"></div>
       </div>
 
-      <!-- ===== Režim 8+2 ===== -->
+      <!-- 8+2 -->
       <div id="mode-82" style="display:none;">
 
-        <!-- Podrežimy: Classic / Unlimited -->
         <div style="margin:.25rem 0 1rem;">
           <strong>8+2 mód:</strong>
           <label style="margin-left:.75rem; margin-right:1rem;">
-            <input type="radio" name="m82submode" value="classic" id="m82-classic-radio" checked>
-            Classic (počítám z 11)
+            <input type="radio" name="m82submode" value="classic" id="m82-classic-radio" checked> Classic (počítám z 11)
           </label>
           <label>
-            <input type="radio" name="m82submode" value="unlimited" id="m82-unlimited-radio">
-            Unlimited (kolíky do zavření)
+            <input type="radio" name="m82submode" value="unlimited" id="m82-unlimited-radio"> Unlimited (kolíky do zavření)
           </label>
         </div>
 
         <!-- Classic -->
         <div id="m82-classic">
-          <p><em>Kolik kubbů z 10 padlo?</em> (při 10 se spolu s tím zeptám na krále)</p>
+          <p><em>Kolik kubbů z 10 padlo?</em> (při 10 se zeptám na krále)</p>
 
           <div style="margin:.5rem 0 1rem;">
             <label for="m82-classic-throws" style="font-weight:600;">Kolíky v této sérii (1–6):</label>
@@ -144,7 +131,7 @@
       </div>
     </section>
 
-    <!-- Historie – náhled + tlačítka (upravené popisky) -->
+    <!-- Historie -->
     <section class="section-box">
       <h2>Historie</h2>
 
@@ -153,7 +140,6 @@
       </div>
 
       <div class="history-actions">
-        <!-- kratší popisky, lépe se vejdou na mobilu -->
         <button id="open-history-btn" class="btn-nowrap ripple" title="Otevřít celou historii">Historie</button>
 
         <span class="flex-spacer"></span>
@@ -176,17 +162,18 @@
           <button class="seg-btn ripple" data-range="all">Celkem</button>
         </span>
       </h2>
+
+      <!-- karty a grafy se vkládají skriptem -->
       <div id="stats">
         <div style="opacity:.7;">Vyber uživatele, zobrazí se souhrny pro 8m, 8+2 Classic a 8+2 Unlimited.</div>
       </div>
       <div id="stats-note" class="muted" style="margin-top:.4rem;"></div>
     </section>
 
-    <!-- Verze cache (ukazuje ji script.js) -->
     <div id="cache-version">Cache verze: -</div>
   </div>
 
-  <!-- Toast notifikace -->
+  <!-- Toast -->
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Modal historie -->
