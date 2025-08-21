@@ -5,69 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Kubb Tracker</title>
+  <title>Kubb Tracker v1.05</title>
 
-  <link rel="canonical" href="https://jirkis69.github.io/Kubb-tracker/" />
-  <meta name="theme-color" content="#003366" />
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0b4ea9" />
+
+  <!-- Styl -->
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <!-- Top progress bar -->
-  <div id="top-progress" aria-hidden="true"></div>
+  <!-- Progress & Toast -->
+  <div id="top-progress"></div>
+  <div id="toast-container"></div>
 
   <div id="app-container">
-
     <header>
-      <div style="text-align: center; margin-bottom: 2rem; background: #eef6ff; padding: 1rem; border-radius: 18px; box-shadow: 0 6px 20px rgba(20,53,97,.10); border:1px solid #e6eef7;">
-        <img src="icon-512.png" alt="Kubb Tracker logo" style="width: 175px; height: auto;" />
+      <div style="text-align:center; margin-bottom: 1rem; padding: 1rem;">
+        <img src="icon-512.png" alt="Kubb Tracker logo" style="width: 160px; height:auto;" />
       </div>
     </header>
 
     <!-- Uživatelé -->
     <section class="section-box">
       <h2>Uživatelé</h2>
-      <input type="text" id="user-name-input" placeholder="Jméno uživatele" />
-      <button id="add-user-btn" class="ripple">Přidat uživatele</button>
-      <div id="user-list"></div>
+      <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+        <input type="text" id="user-name-input" placeholder="Jméno uživatele" />
+        <button id="add-user-btn">Přidat</button>
+      </div>
+      <div id="user-list" style="margin-top:.6rem;"></div>
     </section>
 
     <!-- Trénink -->
     <section class="section-box">
       <h2>Trénink – <span id="current-user-name">žádný</span></h2>
 
+      <!-- Přepínač hlavního režimu -->
       <div style="margin:.5rem 0 1rem;">
         <label style="margin-right:1rem;">
-          <input type="radio" name="mode" value="8m" id="mode-8m-radio" checked> Režim 8m
+          <input type="radio" name="mode" value="8m" id="mode-8m-radio" checked>
+          Režim 8m
         </label>
         <label>
-          <input type="radio" name="mode" value="8+2" id="mode-82-radio"> Režim 8+2
+          <input type="radio" name="mode" value="8+2" id="mode-82-radio">
+          Režim 8+2
         </label>
       </div>
 
-      <!-- 8m -->
+      <!-- ===== Režim 8m ===== -->
       <div id="mode-8m">
-        <button id="undo-last-series-btn" class="ripple">↩️ Vrátit poslední sérii</button>
+        <button id="undo-last-series-btn">↩️ Vrátit poslední sérii</button>
 
-        <div>
+        <div style="margin-top:.5rem;">
           <label>Vyber shozených kubbů (kliknutím se uloží série):</label><br />
-          <div id="hit-buttons">
-            <button class="hit-btn ripple" data-value="0">0</button>
-            <button class="hit-btn ripple" data-value="1">1</button>
-            <button class="hit-btn ripple" data-value="2">2</button>
-            <button class="hit-btn ripple" data-value="3">3</button>
-            <button class="hit-btn ripple" data-value="4">4</button>
-            <button class="hit-btn ripple" data-value="5">5</button>
+          <div id="hit-buttons" style="display:flex; gap:.3rem; flex-wrap:wrap; margin:.3rem 0;">
+            <button class="hit-btn" data-value="0">0</button>
+            <button class="hit-btn" data-value="1">1</button>
+            <button class="hit-btn" data-value="2">2</button>
+            <button class="hit-btn" data-value="3">3</button>
+            <button class="hit-btn" data-value="4">4</button>
+            <button class="hit-btn" data-value="5">5</button>
           </div>
         </div>
 
-        <div>
-          <label for="throws-input">Počet hodů (výchozí 6):</label>
-          <input type="number" id="throws-input" min="1" max="6" value="6" style="width: 50px;" />
+        <div style="margin:.3rem 0 .8rem;">
+          <label for="throws-input">Počet hodů (1–6, výchozí 6):</label>
+          <input type="number" id="throws-input" min="1" max="6" value="6" />
         </div>
 
-        <button id="end-training-btn" class="danger-button ripple">Ukončit trénink</button>
+        <button id="end-training-btn" class="danger-button">Ukončit trénink</button>
 
         <div id="current-training-summary" style="display:none;">
           <strong>Aktuální trénink:</strong><br />
@@ -76,26 +82,27 @@
           Celkem hodů: <span id="total-throws">0</span><br />
           Úspěšnost: <span id="success-rate">0</span>%
         </div>
-
-        <div id="training-summary"></div>
       </div>
 
-      <!-- 8+2 -->
+      <!-- ===== Režim 8+2 ===== -->
       <div id="mode-82" style="display:none;">
 
+        <!-- Podrežimy: Classic / Unlimited -->
         <div style="margin:.25rem 0 1rem;">
           <strong>8+2 mód:</strong>
           <label style="margin-left:.75rem; margin-right:1rem;">
-            <input type="radio" name="m82submode" value="classic" id="m82-classic-radio" checked> Classic (počítám z 11)
+            <input type="radio" name="m82submode" value="classic" id="m82-classic-radio" checked>
+            Classic (počítám z 11)
           </label>
           <label>
-            <input type="radio" name="m82submode" value="unlimited" id="m82-unlimited-radio"> Unlimited (kolíky do zavření)
+            <input type="radio" name="m82submode" value="unlimited" id="m82-unlimited-radio">
+            Unlimited (kolíky do zavření)
           </label>
         </div>
 
-        <!-- Classic -->
+        <!-- Classic: čipy 0–10 + pole pro počet kolíků + dotaz na krále při 10 -->
         <div id="m82-classic">
-          <p><em>Kolik kubbů z 10 padlo?</em> (při 10 se zeptám na krále)</p>
+          <p><em>Kolik kubbů z 10 padlo?</em> (při 10 se spolu s tím zeptám na krále)</p>
 
           <div style="margin:.5rem 0 1rem;">
             <label for="m82-classic-throws" style="font-weight:600;">Kolíky v této sérii (1–6):</label>
@@ -103,26 +110,26 @@
           </div>
 
           <div id="m82-classic-chips" style="display:flex; flex-wrap:wrap; gap:.4rem;">
-            <button class="hit-btn m82c-chip ripple" data-kubb="0">0</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="1">1</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="2">2</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="3">3</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="4">4</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="5">5</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="6">6</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="7">7</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="8">8</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="9">9</button>
-            <button class="hit-btn m82c-chip ripple" data-kubb="10">10</button>
+            <button class="hit-btn m82c-chip" data-kubb="0">0</button>
+            <button class="hit-btn m82c-chip" data-kubb="1">1</button>
+            <button class="hit-btn m82c-chip" data-kubb="2">2</button>
+            <button class="hit-btn m82c-chip" data-kubb="3">3</button>
+            <button class="hit-btn m82c-chip" data-kubb="4">4</button>
+            <button class="hit-btn m82c-chip" data-kubb="5">5</button>
+            <button class="hit-btn m82c-chip" data-kubb="6">6</button>
+            <button class="hit-btn m82c-chip" data-kubb="7">7</button>
+            <button class="hit-btn m82c-chip" data-kubb="8">8</button>
+            <button class="hit-btn m82c-chip" data-kubb="9">9</button>
+            <button class="hit-btn m82c-chip" data-kubb="10">10</button>
           </div>
         </div>
 
-        <!-- Unlimited -->
+        <!-- Unlimited: rozbalovací seznam počtu kolíků do zavření -->
         <div id="m82-unlimited" style="display:none; margin-top:.5rem;">
           <label for="m82-unl-pins"><em>Kolik kolíků celkem bylo potřeba na shození všech 11 (10 kubbů + král)?</em></label>
           <select id="m82-unl-pins" style="margin-left:.5rem;"></select>
-          <button id="m82-unl-save" class="hit-btn ripple" style="margin-left:.5rem;">Uložit</button>
-          <button id="m82-unl-dnf" class="danger-button ripple" style="margin-left:.25rem;">DNF</button>
+          <button id="m82-unl-save" class="hit-btn" style="margin-left:.5rem;">Uložit</button>
+          <button id="m82-unl-dnf" class="danger-button" style="margin-left:.25rem;">DNF</button>
         </div>
 
         <div style="margin-top:.6rem; font-size:.95rem; opacity:.85;">
@@ -131,83 +138,81 @@
       </div>
     </section>
 
-    <!-- Historie -->
+    <!-- Historie + Import/Export -->
     <section class="section-box">
       <h2>Historie</h2>
-
-      <div id="history-preview" class="history-preview">
-        Vyber uživatele, abys viděl poslední záznam.
-      </div>
+      <div id="history-preview" class="history-preview">Vyber uživatele, abys viděl poslední záznam.</div>
 
       <div class="history-actions">
-        <button id="open-history-btn" class="btn-nowrap ripple" title="Otevřít celou historii">Historie</button>
-
-        <span class="flex-spacer"></span>
-
-        <button id="export-all-btn" class="btn-nowrap ripple" title="Export všech uživatelů">Exp vše</button>
-        <button id="export-current-btn" class="btn-nowrap ripple" title="Export aktuálního uživatele">Exp akt.</button>
-
-        <input type="file" id="import-file" accept="application/json" style="display:none;">
-        <button id="import-btn" class="btn-nowrap ripple" title="Import JSON (sloučení)">Import</button>
+        <button id="open-history-btn" class="btn-nowrap">Otevřít historii</button>
+        <div class="flex-spacer"></div>
+        <button id="export-all-btn" class="btn-nowrap">Export vše</button>
+        <button id="export-current-btn" class="btn-nowrap">Export uživ.</button>
+        <button id="import-btn" class="btn-nowrap">Import</button>
+        <input id="import-file" type="file" accept="application/json" style="display:none;" />
       </div>
     </section>
 
     <!-- Statistiky -->
     <section class="section-box">
-      <h2 style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
-        Přehledové statistiky
-        <span class="seg">
-          <button class="seg-btn active ripple" data-range="7d">7 dní</button>
-          <button class="seg-btn ripple" data-range="30d">30 dní</button>
-          <button class="seg-btn ripple" data-range="all">Celkem</button>
-        </span>
-      </h2>
-
-      <!-- karty a grafy se vkládají skriptem -->
-      <div id="stats">
-        <div style="opacity:.7;">Vyber uživatele, zobrazí se souhrny pro 8m, 8+2 Classic a 8+2 Unlimited.</div>
+      <h2>Statistiky</h2>
+      <div class="seg" style="margin-bottom:.6rem;">
+        <button class="seg-btn active" data-range="7d">7 dní</button>
+        <button class="seg-btn" data-range="30d">30 dní</button>
+        <button class="seg-btn" data-range="all">Celkem</button>
       </div>
-      <div id="stats-note" class="muted" style="margin-top:.4rem;"></div>
+      <div id="stats-note" class="muted" style="margin-bottom:.4rem;"></div>
+      <div id="stats"><div class="muted">Vyber uživatele, zobrazí se souhrny pro 8m, 8+2 Classic a 8+2 Unlimited.</div></div>
     </section>
 
+    <!-- Verze cache -->
     <div id="cache-version">Cache verze: -</div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-  <!-- Modal historie -->
-  <div id="history-modal" class="modal" aria-hidden="true" role="dialog" aria-label="Historie">
+  <!-- === HISTORIE MODAL === -->
+  <div id="history-modal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" data-dismiss="history-modal"></div>
-    <div class="modal-dialog" role="document">
-      <div class="modal-header">
-        <h3>Historie – <span id="history-modal-user">—</span></h3>
-        <button class="modal-close ripple" data-dismiss="history-modal" aria-label="Zavřít">✖</button>
+    <div class="modal-dialog">
+      <div class="modal-header sticky">
+        <strong>Historie – <span id="history-modal-user">?</span></strong>
+        <button class="danger-button" data-dismiss="history-modal">Zavřít</button>
       </div>
-      <div class="modal-toolbar">
-        <label>Filtrovat:</label>
-        <select id="history-filter">
-          <option value="all" selected>vše</option>
-          <option value="8m">8m</option>
-          <option value="8p2Classic">8+2 Classic</option>
-          <option value="8p2Unlimited">8+2 Unlimited</option>
-        </select>
-        <label style="margin-left:auto;">Zobrazit:</label>
-        <select id="history-page-size">
-          <option value="30" selected>posledních 30</option>
-          <option value="60">posledních 60</option>
-          <option value="100">posledních 100</option>
-          <option value="all">vše</option>
-        </select>
+
+      <div class="modal-toolbar sticky" style="display:flex; gap:.6rem; align-items:center; flex-wrap:wrap;">
+        <!-- Chips filtry -->
+        <div class="chip-group" style="flex:1 1 auto;">
+          <button class="chip active" data-f="all">Vše</button>
+          <button class="chip" data-f="8m">8m</button>
+          <button class="chip" data-f="8p2Classic">Classic</button>
+          <button class="chip" data-f="8p2Unlimited">Unlimited</button>
+        </div>
+
+        <!-- Počet načítaných -->
+        <label style="margin-left:auto;">Záznamů:
+          <select id="history-page-size" style="margin-left:.35rem;">
+            <option value="30" selected>30</option>
+            <option value="60">60</option>
+            <option value="100">100</option>
+            <option value="all">Vše</option>
+          </select>
+        </label>
       </div>
-      <div id="history-list" class="modal-body">Načítám…</div>
-      <div class="modal-footer">
+
+      <div id="history-list" class="modal-body">
+        <!-- plní script.js -->
+      </div>
+
+      <div class="modal-footer sticky-bottom">
         <span id="history-info" class="muted"></span>
-        <button id="history-load-more" class="ripple">Načíst starší</button>
+        <div>
+          <button id="history-load-more">Načíst víc</button>
+          <button data-dismiss="history-modal">Zavřít</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Skript -->
   <script src="script.js"></script>
 </body>
 </html>

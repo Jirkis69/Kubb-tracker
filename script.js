@@ -1,5 +1,10 @@
-// --- Service Worker badge (jen info) ---
-const CACHE_VERSION = 'v1.04';
+// ======================
+// Kubb Tracker v1.05 (script.js)
+// 8m MA5 trend + kliky; 8+2 distribuce = full-width GRID (bez horizontálního scrollu, vyvážená výška)
+// ======================
+
+// --- Service Worker badge (info) ---
+const CACHE_VERSION = 'v1.05';
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('cache-version');
   if (badge) badge.textContent = `Cache verze: ${CACHE_VERSION}`;
@@ -20,9 +25,9 @@ let currentTraining = [];    // pro 8m
 let currentMode = '8m';      // '8m' | '8+2'
 let m82Submode = 'classic';  // 'classic' | 'unlimited'
 
-// Historie modal/paginace
+// Historie modal/paginace + filtry (chips)
 let historyVisibleCount = 30;
-let historyFilter = 'all';
+let historyFilter = 'all'; // all | 8m | 8p2Classic | 8p2Unlimited
 
 // Statistiky – rozsah (7d|30d|all)
 let statsRange = '7d';
@@ -30,7 +35,6 @@ let statsRange = '7d';
 // ====== PROGRESS BAR ======
 const topProgressEl = document.getElementById('top-progress');
 function progressStart(){ if(!topProgressEl) return; topProgressEl.classList.add('active'); topProgressEl.style.width='6%'; }
-function progressSet(p){ if(!topProgressEl) return; topProgressEl.style.width=Math.max(0,Math.min(98,p|0))+'%'; }
 function progressFinish(){ if(!topProgressEl) return; topProgressEl.style.width='100%'; setTimeout(()=>{ topProgressEl.classList.remove('active'); topProgressEl.style.width='0%'; }, 250); }
 
 // ====== RIPPLE ======
@@ -49,7 +53,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ====== TOAST ======
-function showToast(message, timeout = 2000) {
+function showToast(message, timeout = 2400) {
   const c = document.getElementById('toast-container');
   if (!c) { console.log('[Toast]', message); return; }
   const el = document.createElement('div'); el.className = 'toast'; el.textContent = message;
@@ -106,7 +110,13 @@ async function importJSONFile(file){
   finally{ progressFinish(); }
 }
 function makeEntrySignature(e){
-  const base={type:e?.type??null,mode:e?.mode??null,date:e?.date??null,in10:e?.in10??null,king:e?.king??null,total11:e?.total11??null,throwsUsed:e?.throwsUsed??null,pinsToClose:e?.pinsToClose??null,dnf:e?.dnf??null,training:Array.isArray(e?.training)?e.training.map(s=>({hit:s.hit,throws:s.throws})):null,totalHit:e?.totalHit??null,totalThrows:e?.totalThrows??null,successRate:e?.successRate??null};
+  const base={
+    type:e?.type??null, mode:e?.mode??null, date:e?.date??null,
+    in10:e?.in10??null, king:e?.king??null, total11:e?.total11??null, throwsUsed:e?.throwsUsed??null,
+    pinsToClose:e?.pinsToClose??null, dnf:e?.dnf??null,
+    training:Array.isArray(e?.training)?e.training.map(s=>({hit:s.hit,throws:s.throws})):null,
+    totalHit:e?.totalHit??null, totalThrows:e?.totalThrows??null, successRate:e?.successRate??null
+  };
   return JSON.stringify(base);
 }
 function normalizeEntry(e){
@@ -135,6 +145,17 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.seg-btn[data-range]').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active'); statsRange = btn.getAttribute('data-range')||'7d';
       if (currentUser) renderStats(currentUser);
+    });
+  });
+
+  // chips filtry historie (8m / Classic / Unlimited / Vše)
+  document.querySelectorAll('.chip[data-f]').forEach(ch => {
+    ch.addEventListener('click', () => {
+      document.querySelectorAll('.chip[data-f]').forEach(x => x.classList.remove('active'));
+      ch.classList.add('active');
+      historyFilter = ch.getAttribute('data-f') || 'all';
+      historyVisibleCount = parsePageSize(document.getElementById('history-page-size')?.value);
+      if (currentUser) renderHistoryModal(currentUser);
     });
   });
 });
@@ -279,33 +300,16 @@ m82UnlDNFBtn.addEventListener('click', ()=>{
   renderHistoryPreview(currentUser); renderStats(currentUser); showToast('DNF uloženo'); progressFinish();
 });
 
-// ====== HISTORIE – náhled + modal (beze změn logiky) ======
+// ====== HISTORIE – náhled + modal (kompaktní karty) ======
 function renderHistoryPreview(userName){
   const users=loadUsers(); const user=users.find(u=>u.name===userName);
   const preview=document.getElementById('history-preview'); if (!preview) return;
   if (!user||!user.history||user.history.length===0){ preview.textContent='Žádná historie.'; return; }
-  const e=user.history[user.history.length-1]; const dateStr=new Date(e.date).toLocaleString();
-  if (e.type==='8m'){
-    const hits=e.totalHit ?? e.training?.reduce((a,c)=>a+c.hit,0) ?? 0;
-    const thr =e.totalThrows ?? e.training?.reduce((a,c)=>a+c.throws,0) ?? 0;
-    const suc =thr?Math.round(hits/thr*100):0; const cnt=e.training?e.training.length:0;
-    preview.textContent = `${dateStr} – 8m | Série: ${cnt}, Shozeno: ${hits}, Hodů: ${thr}, Úspěšnost: ${suc}%`;
-  } else if (e.type==='8+2'){
-    if (e.mode==='classic'){
-      const v11=e.total11 ?? ((e.in10||0)+(e.king?1:0));
-      const tTxt=(e.throwsUsed!=null)?` | kolíky: ${e.throwsUsed}`:'';
-      preview.textContent = (e.in10===10)
-        ? `${dateStr} – 8+2 Classic | v10: 10 ${e.king?'+ král':'+ král NE'} → ${v11}/11${tTxt}`
-        : `${dateStr} – 8+2 Classic | v10: ${e.in10}/10 → ${v11}/11${tTxt}`;
-    } else if (e.mode==='unlimited'){
-      preview.textContent = e.dnf ? `${dateStr} – 8+2 Unlimited | DNF` : `${dateStr} – 8+2 Unlimited | Zavřeno na ${e.pinsToClose} kolících`;
-    } else preview.textContent = `${dateStr} – 8+2`;
-  } else preview.textContent = `${dateStr} – záznam`;
+  const e=user.history[user.history.length-1]; preview.innerHTML = historyCardLine(e);
 }
 function clearHistoryPreview(){ const p=document.getElementById('history-preview'); if (p) p.textContent='Vyber uživatele, abys viděl poslední záznam.'; }
 
 const openHistoryBtn=document.getElementById('open-history-btn');
-const historyFilterSelect=document.getElementById('history-filter');
 const historyPageSizeSelect=document.getElementById('history-page-size');
 const historyLoadMoreBtn=document.getElementById('history-load-more');
 const historyInfoSpan=document.getElementById('history-info');
@@ -314,45 +318,121 @@ openHistoryBtn?.addEventListener('click', ()=>{
   if (!currentUser){ alert('Vyber nejdříve uživatele.'); return; }
   document.getElementById('history-modal-user').textContent=currentUser;
   historyVisibleCount=parsePageSize(historyPageSizeSelect?.value);
-  historyFilter=historyFilterSelect?.value||'all';
   openModal('history-modal'); renderHistoryModal(currentUser);
 });
-historyFilterSelect?.addEventListener('change',()=>{ historyFilter=historyFilterSelect.value; historyVisibleCount=parsePageSize(historyPageSizeSelect.value); renderHistoryModal(currentUser); });
 historyPageSizeSelect?.addEventListener('change',()=>{ historyVisibleCount=parsePageSize(historyPageSizeSelect.value); renderHistoryModal(currentUser); });
-historyLoadMoreBtn?.addEventListener('click',()=>{ if(historyPageSizeSelect.value==='all') return; historyVisibleCount += parseInt(historyPageSizeSelect.value,10)||30; renderHistoryModal(currentUser); });
+historyLoadMoreBtn?.addEventListener('click',()=>{ if(historyPageSizeSelect?.value==='all') return; historyVisibleCount += parseInt(historyPageSizeSelect?.value,10)||30; renderHistoryModal(currentUser); });
 
 function parsePageSize(val){ return (val==='all')?Infinity:parseInt(val||'30',10); }
+
 function renderHistoryModal(userName){
   const users=loadUsers(); const user=users.find(u=>u.name===userName);
-  const list=document.getElementById('history-list'); list.innerHTML='';
-  if (!user||!user.history||user.history.length===0){ list.textContent='Žádná historie.'; historyInfoSpan.textContent=''; historyLoadMoreBtn?.setAttribute('disabled','disabled'); return; }
+  const list=document.getElementById('history-list'); if (!list) return;
+  list.innerHTML='';
+  if (!user||!user.history||user.history.length===0){ list.textContent='Žádná historie.'; historyInfoSpan && (historyInfoSpan.textContent=''); historyLoadMoreBtn?.setAttribute('disabled','disabled'); return; }
+
   let all=user.history.slice().reverse();
   if (historyFilter==='8m') all=all.filter(e=>e.type==='8m');
   else if (historyFilter==='8p2Classic') all=all.filter(e=>e.type==='8+2'&&e.mode==='classic');
   else if (historyFilter==='8p2Unlimited') all=all.filter(e=>e.type==='8+2'&&e.mode==='unlimited');
+
   const slice=all.slice(0, Math.min(historyVisibleCount, all.length));
-  slice.forEach(e=>{
-    const div=document.createElement('div'); const dateStr=new Date(e.date).toLocaleString();
-    if (e.type==='8m'){
-      const hits=e.totalHit ?? e.training?.reduce((a,c)=>a+c.hit,0) ?? 0;
-      const thr =e.totalThrows ?? e.training?.reduce((a,c)=>a+c.throws,0) ?? 0;
-      const suc =thr?Math.round(hits/thr*100):0; const cnt=e.training?e.training.length:0;
-      div.textContent = `${dateStr} – 8m | Série: ${cnt}, Shozeno: ${hits}, Hodů: ${thr}, Úspěšnost: ${suc}%`;
-    } else if (e.type==='8+2') {
-      if (e.mode==='classic'){
+  slice.forEach((e)=>{
+    const row=document.createElement('div');
+    row.className='hist-card';
+    row.innerHTML = historyCardLine(e);
+
+    // Klik pro rozbalení detailů (zejména 8m: série)
+    row.addEventListener('click', () => {
+      const expanded = row.querySelector('.hist-details');
+      if (expanded) { expanded.remove(); return; }
+      const det = document.createElement('div');
+      det.className = 'hist-details';
+      det.style.marginTop = '.45rem';
+      det.style.fontSize = '.95rem';
+      det.style.color = '#334155';
+      det.style.borderTop = '1px dashed var(--border)';
+      det.style.paddingTop = '.45rem';
+
+      if (e.type==='8m' && Array.isArray(e.training) && e.training.length){
+        const lines = e.training.map((s,i)=>{
+          const acc = s.throws>0 ? Math.round((s.hit/s.throws)*100) : 0;
+          return `${i+1}) ${s.hit}/${s.throws} → ${acc}%`;
+        }).join('<br>');
+        det.innerHTML = `<strong>Série:</strong><br>${lines}`;
+      } else if (e.type==='8+2' && e.mode==='classic'){
         const v11=e.total11 ?? ((e.in10||0)+(e.king?1:0));
-        const tTxt=(e.throwsUsed!=null)?` | kolíky: ${e.throwsUsed}`:'';
-        div.textContent = (e.in10===10)
-          ? `${dateStr} – 8+2 Classic | v10: 10 ${e.king?'+ král':'+ král NE'} → ${v11}/11${tTxt}`
-          : `${dateStr} – 8+2 Classic | v10: ${e.in10}/10 → ${v11}/11${tTxt}`;
-      } else if (e.mode==='unlimited'){
-        div.textContent = e.dnf ? `${dateStr} – 8+2 Unlimited | DNF` : `${dateStr} – 8+2 Unlimited | Zavřeno na ${e.pinsToClose} kolících`;
-      } else div.textContent = `${dateStr} – 8+2`;
-    } else div.textContent = `${dateStr} – záznam`;
-    list.appendChild(div);
+        det.innerHTML = `v10: ${e.in10}/10 ${e.in10===10? (e.king?'(+ král)':'(+ král NE)') : ''} → v11: <strong>${v11}/11</strong>${e.throwsUsed!=null?` • kolíky: ${e.throwsUsed}`:''}`;
+      } else if (e.type==='8+2' && e.mode==='unlimited'){
+        det.textContent = e.dnf ? 'DNF (nedokončeno)' : `Zavřeno na ${e.pinsToClose} kolících`;
+      } else {
+        det.textContent = 'Detail není k dispozici.';
+      }
+      row.appendChild(det);
+    });
+
+    list.appendChild(row);
   });
-  const showing=Math.min(slice.length, all.length); historyInfoSpan.textContent=`Zobrazuji ${showing} z ${all.length}`;
-  if (historyLoadMoreBtn){ if (slice.length>=all.length || historyPageSizeSelect.value==='all') historyLoadMoreBtn.setAttribute('disabled','disabled'); else historyLoadMoreBtn.removeAttribute('disabled'); }
+
+  const showing=Math.min(slice.length, all.length); historyInfoSpan && (historyInfoSpan.textContent=`Zobrazuji ${showing} z ${all.length}`);
+  if (historyLoadMoreBtn){ if (slice.length>=all.length || historyPageSizeSelect?.value==='all') historyLoadMoreBtn.setAttribute('disabled','disabled'); else historyLoadMoreBtn.removeAttribute('disabled'); }
+}
+function historyCardLine(e){
+  const date = relativeDate(e.date);
+  if (e.type==='8m'){
+    const hits=e.totalHit ?? e.training?.reduce((a,c)=>a+c.hit,0) ?? 0;
+    const thr =e.totalThrows ?? e.training?.reduce((a,c)=>a+c.throws,0) ?? 0;
+    const suc =thr?Math.round(hits/thr*100):0;
+    const seriesCount = e.training ? e.training.length : 0;
+    return `
+      <div class="row-top">
+        <span class="mode-ico">🎯</span>
+        <span class="main-val">${suc}%</span>
+        <span class="date">${date}</span>
+      </div>
+      <div class="row-sub muted">Série: ${seriesCount} • Shozeno: ${hits} • Hodů: ${thr}</div>
+    `;
+  } else if (e.type==='8+2'){
+    if (e.mode==='classic'){
+      const v11=e.total11 ?? ((e.in10||0)+(e.king?1:0));
+      const tTxt=(e.throwsUsed!=null)?` • kolíky: ${e.throwsUsed}`:'';
+      const in10txt = (e.in10===10) ? `v10=10 ${e.king?'+ král':'(+ král NE)'}` : `v10=${e.in10}`;
+      return `
+        <div class="row-top">
+          <span class="mode-ico">🔵</span>
+          <span class="main-val">${v11}/11</span>
+          <span class="date">${date}</span>
+        </div>
+        <div class="row-sub muted">${in10txt}${tTxt}</div>
+      `;
+    } else if (e.mode==='unlimited'){
+      const main = e.dnf ? 'DNF' : `${e.pinsToClose} kol.`;
+      return `
+        <div class="row-top">
+          <span class="mode-ico">🟠</span>
+          <span class="main-val">${main}</span>
+          <span class="date">${date}</span>
+        </div>
+        <div class="row-sub muted">${e.dnf ? 'nedokončeno' : 'zavřeno'}</div>
+      `;
+    } else {
+      return `<div class="row-top"><span class="mode-ico">ℹ️</span><span class="main-val">8+2</span><span class="date">${date}</span></div>`;
+    }
+  } else {
+    return `<div class="row-top"><span class="mode-ico">ℹ️</span><span class="main-val">záznam</span><span class="date">${date}</span></div>`;
+  }
+}
+function relativeDate(iso){
+  const d=new Date(iso); const now=new Date();
+  const diff=(now-d)/1000; // s
+  if (diff<60) return 'před chvílí';
+  if (diff<3600) return `${Math.floor(diff/60)} min`;
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const day = new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  if (day===today) return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const ymd = d.toLocaleDateString();
+  const hm  = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  return `${ymd} ${hm}`;
 }
 
 // ====== MODAL infra ======
@@ -361,8 +441,9 @@ function closeModal(id){ const m=document.getElementById(id); if (!m) return; m.
 document.addEventListener('click',(e)=>{ if (e.target?.getAttribute?.('data-dismiss')==='history-modal') closeModal('history-modal'); });
 document.addEventListener('keydown',(e)=>{ if (e.key==='Escape') closeModal('history-modal'); });
 
-// ====== STATISTIKY v1.04 ======
-// Filtr dle rozsahu
+// ======================
+// Statistiky – filtrování rozsahu a výpočet metrik
+// ======================
 function filterHistoryByRange(history, range){
   if (!Array.isArray(history)) return [];
   if (range==='all') return history.slice();
@@ -370,12 +451,11 @@ function filterHistoryByRange(history, range){
   return history.filter(e=>{ const t=new Date(e.date).getTime(); return !isNaN(t)&&t>=from&&t<=now; });
 }
 
-// Výpočet metrik
 function computeStats(history){
   const out={
-    m8m: { sessions:0, avgAcc:0, bestAcc:0, seriesAcc:[] },
-    c82: { sessions:0, avgV10:0, avgV11:0, bestV11:0, bestV11MinPins:null, kingAsk:0, kingHit:0, avgThrowsUsed:null, distV11: new Array(12).fill(0), trendV11:[] },
-    u82: { sessions:0, avgPins:null, bestPins:null, dnf:0, distPins: new Array(17).fill(0), trendPins:[] } // pins 4..20 => 17 bucketů
+    m8m: { sessions:0, avgAcc:0, bestAcc:0, seriesAcc:[], sessions8m:[] },
+    c82: { sessions:0, avgV10:0, avgV11:0, distV11: new Array(12).fill(0), trendV11:[] },
+    u82: { sessions:0, avgPins:null, bestPins:null, dnf:0, distPins: new Array(17).fill(0), trendPins:[] } // 4..20 → 17 bucketů
   };
   if (!history?.length) return out;
 
@@ -385,7 +465,6 @@ function computeStats(history){
   const hSorted = history.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
 
   let totalHits=0,totalThrows=0;
-  let throwsSum=0, throwsCount=0;
 
   hSorted.forEach(e=>{
     if (e.type==='8m'){
@@ -393,24 +472,14 @@ function computeStats(history){
       const thr =e.totalThrows ?? (e.training?.reduce((a,c)=>a+(c.throws||0),0)||0);
       const acc = thr ? Math.round(hits/thr*100) : 0;
       out.m8m.sessions++; totalHits+=hits; totalThrows+=thr; out.m8m.bestAcc=Math.max(out.m8m.bestAcc, acc); out.m8m.seriesAcc.push(acc);
+      out.m8m.sessions8m.push({acc, hits, thr, date:e.date, entry:e});
     }
     if (e.type==='8+2' && e.mode==='classic'){
       const in10 = e.in10 ?? 0;
       const v11  = e.total11 != null ? e.total11 : (in10 + (e.king?1:0));
       out.c82.sessions++;
-
-      v10Vals.push(in10); v11Vals.push(v11); v11Trend.push(v11);
-      out.c82.bestV11 = Math.max(out.c82.bestV11, v11);
-      if (v11===out.c82.bestV11 && e.throwsUsed!=null){
-        if (out.c82.bestV11MinPins==null || e.throwsUsed<out.c82.bestV11MinPins) out.c82.bestV11MinPins = e.throwsUsed;
-      }
-      if (e.throwsUsed!=null){ throwsSum+=e.throwsUsed; throwsCount++; }
-
-      // distribuce v11 (0..11)
+      v11Vals.push(v11); v11Trend.push(v11);
       if (v11>=0 && v11<=11) out.c82.distV11[v11]++;
-
-      // king rate, jen když padlo 10/10
-      if (in10===10){ out.c82.kingAsk++; if (e.king) out.c82.kingHit++; }
     }
     if (e.type==='8+2' && e.mode==='unlimited'){
       out.u82.sessions++;
@@ -418,72 +487,239 @@ function computeStats(history){
       else if (e.pinsToClose!=null){
         const p=e.pinsToClose; pinsVals.push(p); pinsTrend.push(p);
         out.u82.bestPins = (out.u82.bestPins==null)?p:Math.min(out.u82.bestPins, p);
-        // distribuce 4..20
         if (p>=4 && p<=20) out.u82.distPins[p-4]++;
       }
     }
   });
 
   out.m8m.avgAcc = totalThrows ? Math.round((totalHits/totalThrows)*100) : 0;
-
-  if (v10Vals.length) out.c82.avgV10 = (v10Vals.reduce((a,b)=>a+b,0)/v10Vals.length).toFixed(2);
   if (v11Vals.length) out.c82.avgV11 = (v11Vals.reduce((a,b)=>a+b,0)/v11Vals.length).toFixed(2);
-  if (throwsCount) out.c82.avgThrowsUsed = (throwsSum/throwsCount).toFixed(2);
+  if (pinsVals.length){ out.u82.avgPins = (pinsVals.reduce((a,b)=>a+b,0)/pinsVals.length).toFixed(2); }
 
-  if (pinsVals.length){
-    out.u82.avgPins = (pinsVals.reduce((a,b)=>a+b,0)/pinsVals.length).toFixed(2);
-  }
-
-  // Trendy – posledních 12 hodnot (ať jsou sloupky čitelné)
   out.c82.trendV11 = v11Trend.slice(-12);
   out.u82.trendPins = pinsTrend.slice(-12);
-
-  // Oříznout 8m série na posledních 20
   out.m8m.seriesAcc = out.m8m.seriesAcc.slice(-20);
+  out.m8m.sessions8m = out.m8m.sessions8m.slice(-20);
 
   return out;
 }
 
-// Mini bar chart komponenty
-function miniBars(values, {min=null, max=null, invert=false, highlightLast=true}={}){
-  const v = values.slice();
-  const filtered = v.filter(x => x!=null);
-  if (!filtered.length) return `<div class="mbars"></div>`;
+// ====== 8m: kombinovaný graf (sloupce + MA5 trend) ======
+function drawComboChart(values, { meta=null, height=170, yMax=100, yTicks=[25,50,75,100], lineColor='#0b4ea9'} = {}){
+  const vals = values.map(v => Math.max(0, Math.min(yMax, v==null?0:v)));
+  const n = vals.length || 1;
+  const m = { top:10, right:12, bottom:22, left:30 };
+  const bw = 12; const gap = 6;
+  const chartW = n*bw + (n-1)*gap;
+  const width = m.left + chartW + m.right;
+  const chartH = height - m.top - m.bottom;
 
-  const lo = (min!=null) ? min : Math.min(...filtered);
-  const hi = (max!=null) ? max : Math.max(...filtered);
-  const span = (hi-lo)||1;
+  const wrap = document.createElement('div');
+  wrap.style.overflowX = 'auto';
+  wrap.style.padding = '4px 0';
 
-  const bars = v.map((val, i)=>{
-    if (val==null) return `<div class="mbar" style="height:2px; opacity:.35;"></div>`;
-    const norm = (val - lo) / span;
-    const h = 8 + Math.round(norm * 34); // 8..42px
-    const cls = (highlightLast && i===v.length-1) ? 'mbar mbar--a' : 'mbar mbar--ok';
-    // invert = u Unlimited (méně je lépe) → vyšší sloupec pro lepší výkon
-    const hh = invert ? 8 + Math.round((1-norm)*34) : h;
-    return `<div class="${cls}" style="height:${hh}px"></div>`;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.style.display='block';
+
+  // Grid + labels
+  yTicks.concat([0]).forEach(tick=>{
+    const y = m.top + (1 - (tick/yMax)) * chartH;
+    const line = document.createElementNS(svg.namespaceURI,'line');
+    line.setAttribute('x1', m.left); line.setAttribute('x2', width - m.right);
+    line.setAttribute('y1', y); line.setAttribute('y2', y);
+    line.setAttribute('stroke', 'rgba(0,0,0,.15)');
+    line.setAttribute('stroke-dasharray', '4 4');
+    svg.appendChild(line);
+
+    if (tick>0){
+      const txt = document.createElementNS(svg.namespaceURI,'text');
+      txt.setAttribute('x', m.left - 6);
+      txt.setAttribute('y', y + 4);
+      txt.setAttribute('text-anchor', 'end');
+      txt.setAttribute('font-size', '10');
+      txt.setAttribute('fill', 'currentColor');
+      txt.textContent = `${tick}%`;
+      svg.appendChild(txt);
+    }
   });
 
-  return `<div class="mbars">${bars.join('')}</div>`;
+  // Bars (barvy vs. průměr z celé sady)
+  const avgVal = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  const green = '#16a34a'; const red = '#dc2626';
+  vals.forEach((v,i)=>{
+    const x = m.left + i*(bw+gap);
+    const h = (v/yMax)*chartH;
+    const y = m.top + (chartH - h);
+    const rect = document.createElementNS(svg.namespaceURI,'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', i===n-1 ? bw+2 : bw);
+    rect.setAttribute('height', Math.max(2, h));
+    rect.setAttribute('rx', '3'); rect.setAttribute('ry', '3');
+    rect.setAttribute('fill', (v>=avgVal)?green:red);
+    rect.style.cursor='pointer';
+    rect.addEventListener('click', ()=>{
+      if (!meta || !meta[i]) return;
+      const it = meta[i];
+      const d = new Date(it.date).toLocaleString();
+      showToast(`8m ${d}: ${it.acc}% • Shozeno ${it.hits}/${it.thr}`);
+    });
+    svg.appendChild(rect);
+  });
+
+  // Trend line = 5-bodový klouzavý průměr (MA5)
+  const ma = movingAverage(vals, 5);
+  let d = '';
+  ma.forEach((v,i)=>{
+    const cx = m.left + i*(bw+gap) + bw/2;
+    const cy = m.top + (chartH - (v/yMax)*chartH);
+    d += (i===0?`M ${cx} ${cy}`:` L ${cx} ${cy}`);
+  });
+  const path = document.createElementNS(svg.namespaceURI,'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', lineColor);
+  path.setAttribute('stroke-width', '2.5');
+  path.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(path);
+
+  // poslední bod zvýraznit
+  if (ma.length){
+    const i = ma.length-1;
+    const cx = m.left + i*(bw+gap) + bw/2;
+    const cy = m.top + (chartH - (ma[i]/yMax)*chartH);
+    const dot = document.createElementNS(svg.namespaceURI,'circle');
+    dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
+    dot.setAttribute('r', '3.2'); dot.setAttribute('fill', lineColor);
+    svg.appendChild(dot);
+  }
+
+  wrap.appendChild(svg);
+  return wrap;
+}
+function movingAverage(arr, windowSize){
+  if (!arr.length) return [];
+  const out=[]; let sum=0;
+  for (let i=0;i<arr.length;i++){
+    sum += arr[i];
+    if (i>=windowSize) sum -= arr[i-windowSize];
+    const count = Math.min(i+1, windowSize);
+    out.push( Math.round( (sum / count) * 10 ) / 10 );
+  }
+  return out;
 }
 
-function distributionBars(buckets, {labels=[], maxHeight=42}={}){
+// ====== Mini bars pro Unlimited – výška = počet kolíků (víc = vyšší), barva vs. průměr ======
+function miniBarsPins(pinsArr){
+  const arr = pinsArr.slice(); // číslo (4..20) nebo null (DNF)
+  const wrap = document.createElement('div');
+  wrap.className = 'mbox';
+  const box = document.createElement('div');
+  box.className = 'mbars'; box.style.position='relative';
+  wrap.appendChild(box);
+
+  const vals = arr.filter(v=>v!=null);
+  const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  const green = '#16a34a'; const red = '#dc2626';
+
+  arr.forEach((v,i)=>{
+    const bar = document.createElement('div');
+    bar.className='mbar';
+    bar.style.flex='0 0 auto';
+    bar.style.width = (i===arr.length-1)?'12px':'8px';
+    if (i===arr.length-1) bar.classList.add('last');
+
+    let h = 12;
+    if (v==null){
+      h = 14; // DNF
+      bar.style.background = 'repeating-linear-gradient(-45deg, #cbd5e1, #cbd5e1 5px, #e2e8f0 5px, #e2e8f0 10px)';
+      bar.title = 'DNF';
+    } else {
+      const norm = (v - 4) / 16; // 0..1 (víc = hůř)
+      h = 14 + Math.round(norm * 50); // 14..64
+      bar.style.background = (avg!=null && v <= avg) ? green : red; // méně/equal kolíků = lepší
+      bar.title = `${v} kolíků`;
+    }
+    bar.style.height = `${h}px`;
+    box.appendChild(bar);
+
+    if (i===arr.length-1){
+      const tip = document.createElement('div');
+      tip.textContent = (v==null)?'DNF':`${v}`;
+      tip.style.fontSize='.82rem';
+      tip.style.opacity='.85';
+      tip.style.marginLeft='2px';
+      tip.style.transform='translateY(-4px)';
+      box.appendChild(tip);
+    }
+  });
+
+  return wrap;
+}
+
+// ====== FULL-WIDTH GRID DISTRIBUTION (bez scrollu) ======
+function drawBarDistributionGrid(buckets, labels, {barColor='#3b82f6', height=110, showValues=true} = {}){
+  const n = buckets.length;
   const max = Math.max(1, ...buckets);
-  const bars = buckets.map((n, idx)=>{
-    const h = Math.round((n/max) * maxHeight);
-    return `<div class="mbar" title="${labels[idx]||idx}: ${n}" style="height:${Math.max(4,h)}px"></div>`;
-  });
-  return `<div>${`<div class="mbars">${bars.join('')}</div>`}${labels.length?`<div class="axis">${axisLabels(labels)}</div>`:''}</div>`;
-}
-function axisLabels(labels){
-  if (labels.length<=1) return '';
-  // Zobrazíme několik významných značek (např. 0, 5, 10, 11)
-  const picks = [0, Math.floor(labels.length/2), labels.length-1];
-  const uniq = Array.from(new Set(picks)).sort((a,b)=>a-b);
-  return uniq.map(i=>`<span>${labels[i]}</span>`).join('');
+
+  const wrap = document.createElement('div');
+  // Kontejner grafu – sloupce na plnou šířku, zarovnání ke spodku
+  wrap.style.display = 'grid';
+  wrap.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+  wrap.style.alignItems = 'end';
+  wrap.style.gap = '6px';
+  wrap.style.padding = '6px 2px 0';
+
+  for (let i=0;i<n;i++){
+    const val = buckets[i];
+    const col = document.createElement('div');
+    col.style.display='flex';
+    col.style.flexDirection='column';
+    col.style.alignItems='center';
+    col.style.minWidth='0';
+
+    // bar
+    const h = Math.max(4, Math.round((val/max) * (height - 20)));
+    const bar = document.createElement('div');
+    bar.style.height = `${h}px`;
+    bar.style.width = '100%';
+    bar.style.maxWidth = '28px';
+    bar.style.borderRadius = '4px 4px 0 0';
+    bar.style.background = barColor;
+    bar.style.opacity = '.92';
+    bar.style.cursor = 'pointer';
+    bar.title = `${labels[i]}: ${val}×`;
+    bar.addEventListener('click', ()=> showToast(`${labels[i]}: ${val}×`));
+    col.appendChild(bar);
+
+    // číslo (jen když něco je a máme prostor)
+    if (showValues && val>0 && h>=16){
+      const vtx = document.createElement('div');
+      vtx.textContent = String(val);
+      vtx.style.fontSize = '.75rem';
+      vtx.style.marginTop = '2px';
+      vtx.style.opacity = '.85';
+      col.appendChild(vtx);
+    }
+
+    // label
+    const lx = document.createElement('div');
+    lx.textContent = String(labels[i]);
+    lx.style.fontSize = '.78rem';
+    lx.style.marginTop = '4px';
+    lx.style.opacity = '.8';
+    col.appendChild(lx);
+
+    wrap.appendChild(col);
+  }
+
+  return wrap;
 }
 
-// Vykreslení statistik
+// ====== Vykreslení statistik ======
 function renderStats(userName){
   const users=loadUsers(); const user=users.find(u=>u.name===userName);
   const root=document.getElementById('stats'); const note=document.getElementById('stats-note');
@@ -498,64 +734,80 @@ function renderStats(userName){
   const map={ '7d':'posledních 7 dní', '30d':'posledních 30 dní', 'all':'celkově' };
   if (note) note.textContent = `Rozsah: ${map[statsRange]} – zahrnuto záznamů: ${filtered.length}`;
 
-  // 8m trend
-  const bars8m = miniBars(s.m8m.seriesAcc, {min:0, max:100, invert:false});
-  // 8+2 Classic – trend a distribuce (0..11)
-  const cTrend = miniBars(s.c82.trendV11, {min:0, max:11, invert:false});
-  const cDist  = distributionBars(s.c82.distV11, {labels:[0,1,2,3,4,5,6,7,8,9,10,11]});
-  // 8+2 Unlimited – trend (méně je lépe) a distribuce (4..20)
-  const uTrend = miniBars(s.u82.trendPins, {min:4, max:20, invert:true});
-  const uDist  = distributionBars(s.u82.distPins, {labels:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]});
+  root.innerHTML = '';
+  const grid = document.createElement('div'); grid.className='stat-grid'; root.appendChild(grid);
 
-  const kingRate = s.c82.kingAsk ? Math.round((s.c82.kingHit/s.c82.kingAsk)*100) : 0;
-
-  root.innerHTML = `
-    <div class="stat-grid">
-
-      <div class="stat-card">
-        <h3>8m</h3>
-        <div class="stat-row"><span class="stat-key">Tréninků</span><span>${s.m8m.sessions}</span></div>
-        <div class="stat-row"><span class="stat-key">Průměrná úspěšnost</span><span>${s.m8m.avgAcc}%</span></div>
-        <div class="stat-row"><span class="stat-key">Nejlepší úspěšnost</span><span>${s.m8m.bestAcc}%</span></div>
-        <div class="stat-row"><span class="stat-key">Trend (posl.)</span><span class="muted">${s.m8m.seriesAcc.length}</span></div>
-        ${bars8m}
-      </div>
-
-      <div class="stat-card">
-        <h3>8+2 Classic</h3>
-        <div class="stat-row"><span class="stat-key">Záznamů</span><span>${s.c82.sessions}</span></div>
-        <div class="stat-row"><span class="stat-key">Průměr v10</span><span>${s.c82.avgV10}</span></div>
-        <div class="stat-row"><span class="stat-key">Průměr v11</span><span>${s.c82.avgV11}</span></div>
-        <div class="stat-row"><span class="stat-key">Nejlepší v11</span><span>${s.c82.bestV11}${s.c82.bestV11MinPins!=null?` (kolíky: ${s.c82.bestV11MinPins})`:''}</span></div>
-        <div class="stat-row"><span class="stat-key">King rate (při 10/10)</span><span>${kingRate}%</span></div>
-        <div class="stat-row"><span class="stat-key">Ø kolíky / série</span><span>${s.c82.avgThrowsUsed ?? '–'}</span></div>
-        <div class="stat-row"><span class="stat-key">Trend v11</span><span class="muted">${s.c82.trendV11.length}</span></div>
-        ${cTrend}
-        <div class="stat-row" style="margin-top:.4rem;"><span class="stat-key">Distribuce v11 (0–11)</span><span></span></div>
-        ${cDist}
-      </div>
-
-      <div class="stat-card">
-        <h3>8+2 Unlimited</h3>
-        <div class="stat-row"><span class="stat-key">Záznamů</span><span>${s.u82.sessions}</span></div>
-        <div class="stat-row"><span class="stat-key">DNF</span><span>${s.u82.dnf}</span></div>
-        <div class="stat-row"><span class="stat-key">Průměr kolíků</span><span>${s.u82.avgPins ?? '–'}</span></div>
-        <div class="stat-row"><span class="stat-key">Nejlépe zavřeno</span><span>${s.u82.bestPins ?? '–'}</span></div>
-        <div class="stat-row"><span class="stat-key">Trend kolíků</span><span class="muted">${s.u82.trendPins.length}</span></div>
-        ${uTrend}
-        <div class="stat-row" style="margin-top:.4rem;"><span class="stat-key">Distribuce kolíků (4–20)</span><span></span></div>
-        ${uDist}
-      </div>
-
-    </div>
+  // --- 8m: kombinovaný graf (sloupce + MA5 trend) ---
+  const card8m = document.createElement('div'); card8m.className='stat-card';
+  card8m.innerHTML = `
+    <h3>8m <span class="muted">• ${s.m8m.sessions} záznamů • Ø ${s.m8m.avgAcc}% • max ${s.m8m.bestAcc}%</span></h3>
+    <div class="stat-row"><span class="stat-key">Trend (posl. ${s.m8m.seriesAcc.length})</span><span></span></div>
   `;
+  const combo = drawComboChart(
+    s.m8m.seriesAcc,
+    { meta: s.m8m.sessions8m, height: 170, yMax: 100, yTicks:[25,50,75,100] }
+  );
+  card8m.appendChild(combo);
+  grid.appendChild(card8m);
+
+  // --- 8+2 Classic: souhrn + distribuce v11 (0..11) – FULL WIDTH GRID ---
+  const cardC = document.createElement('div'); cardC.className='stat-card';
+  const classicItems = filtered.filter(r => r.type==='8+2' && r.mode==='classic');
+  const closedAll = classicItems.filter(r => {
+    const v11 = r.total11 != null ? r.total11 : ((r.in10||0) + (r.king?1:0));
+    return v11 === 11;
+  }).length;
+
+  cardC.innerHTML = `
+    <h3>8+2 Classic</h3>
+    <div class="stat-row"><span class="stat-key">Záznamů</span><span><strong>${s.c82.sessions}</strong></span></div>
+    <div class="stat-row"><span class="stat-key">Průměr v11</span><span><strong>${s.c82.avgV11 || '–'}</strong></span></div>
+    <div class="stat-row"><span class="stat-key">Uzavřeno</span><span><strong>${closedAll}×</strong></span></div>
+    <div class="stat-row" style="margin-top:.35rem;"><span class="stat-key">Distribuce v11</span><span></span></div>
+  `;
+  const labelsC = Array.from({length:12},(_,i)=>i); // 0..11
+  const chartC = drawBarDistributionGrid(s.c82.distV11, labelsC, { barColor:'#3b82f6', height:110 });
+  cardC.appendChild(chartC);
+  grid.appendChild(cardC);
+
+  // --- 8+2 Unlimited: trend minisloupky + distribuce (4..20) – FULL WIDTH GRID ---
+  const cardU = document.createElement('div'); cardU.className='stat-card';
+  cardU.innerHTML = `
+    <h3>8+2 Unlimited
+      <span class="muted">• ${s.u82.sessions} • DNF ${s.u82.dnf} • Ø ${s.u82.avgPins??'–'} kol. • best ${s.u82.bestPins??'–'}</span>
+    </h3>
+    <div class="stat-row"><span class="stat-key">Trend (posl. ${s.u82.trendPins.length})</span><span></span></div>
+  `;
+  const barsU = miniBarsPins(s.u82.trendPins);
+  cardU.appendChild(barsU);
+
+  const distUHdr = document.createElement('div');
+  distUHdr.className = 'stat-row';
+  distUHdr.style.marginTop = '.4rem';
+  distUHdr.innerHTML = `<span class="stat-key">Distribuce kolíků</span><span></span>`;
+  cardU.appendChild(distUHdr);
+
+  const labelsU = Array.from({length:17},(_,i)=>i+4); // 4..20
+  const chartU = drawBarDistributionGrid(s.u82.distPins, labelsU, { barColor:'#f59e0b', height:110 });
+  cardU.appendChild(chartU);
+  grid.appendChild(cardU);
 }
 
 function clearStatsView(){
   const root=document.getElementById('stats'); const note=document.getElementById('stats-note');
-  if (root) root.innerHTML='<div style="opacity:.7;">Vyber uživatele, zobrazí se souhrny pro 8m, 8+2 Classic a 8+2 Unlimited.</div>';
+  if (root) root.innerHTML='<div style="opacity:.7%;">Vyber uživatele, zobrazí se souhrny pro 8m, 8+2 Classic a 8+2 Unlimited.</div>';
   if (note) note.textContent='';
 }
 
 // ====== INIT ======
 renderUserList();
+
+// ========= Historie modal – fallback body =========
+(function ensureHistoryModal(){
+  const modal = document.getElementById('history-modal');
+  if (!modal) return;
+  if (!modal.querySelector('#history-list')){
+    const body=document.createElement('div'); body.id='history-list'; body.className='modal-body';
+    modal.querySelector('.modal-dialog').appendChild(body);
+  }
+})();
