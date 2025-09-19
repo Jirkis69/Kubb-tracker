@@ -172,6 +172,13 @@ button, .hit-btn{ position: relative; overflow: hidden; cursor:pointer; }
   .history-actions .flex-spacer{ display:none; }
   .history-actions button{ flex:1 1 auto; min-width:0; font-size:.95rem; padding:.48rem .6rem; }
 }
+.series-detail{
+  margin-top:.5rem;
+  padding-top:.4rem;
+  border-top:1px dashed var(--border);
+  font-size:.95rem;
+  color:#334155;
+}
 
 /* segmented */
 .seg{

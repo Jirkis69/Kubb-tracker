@@ -1,10 +1,10 @@
 // ======================
-// Kubb Tracker v1.05 (script.js)
+// Kubb Tracker v1.06 (script.js)
 // 8m MA5 trend + kliky; 8+2 distribuce = full-width GRID (bez horizontálního scrollu, vyvážená výška)
 // ======================
 
 // --- Service Worker badge (info) ---
-const CACHE_VERSION = 'v1.05';
+const CACHE_VERSION = 'v1.06';
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('cache-version');
   if (badge) badge.textContent = `Cache verze: ${CACHE_VERSION}`;
@@ -209,37 +209,113 @@ hitButtons.forEach(btn=>{
     if (!currentUser){ alert('Nejdříve vyber uživatele.'); return; }
     if (currentMode!=='8m') return;
     const selectedHits=parseInt(btn.getAttribute('data-value'),10);
-    let tInput=document.getElementById('throws-input'); let throws=parseInt(tInput.value,10);
-    if (isNaN(throws)||throws<1){ throws=6; tInput.value=6; } if (throws>6){ throws=6; tInput.value=6; }
+    let tInput=document.getElementById('throws-input'); 
+    let throws=parseInt(tInput.value,10);
+    if (isNaN(throws)||throws<1){ throws=6; tInput.value=6; } 
+    if (throws>6){ throws=6; tInput.value=6; }
     currentTraining.push({hit:selectedHits, throws, timestamp:new Date().toISOString()});
-    updateCurrentTrainingSummary(); resetThrowsInput(); hitButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected');
+    updateCurrentTrainingSummary(); 
+    resetThrowsInput(); 
+    hitButtons.forEach(b=>b.classList.remove('selected')); 
+    btn.classList.add('selected');
   };
 });
-function resetThrowsInput(){ const t=document.getElementById('throws-input'); if (t) t.value=6; }
+
+function resetThrowsInput(){ 
+  const t=document.getElementById('throws-input'); 
+  if (t) t.value=6; 
+}
+
 function updateCurrentTrainingSummary(){
   const s=document.getElementById('current-training-summary');
-  if (currentTraining.length===0){ s.style.display='none'; return; } s.style.display='block';
-  const series=currentTraining.length; const hits=currentTraining.reduce((a,c)=>a+c.hit,0); const throws=currentTraining.reduce((a,c)=>a+c.throws,0);
+  if (currentTraining.length===0){ 
+    s.style.display='none'; 
+    const det = document.getElementById('series-detail');
+    if (det) det.remove();
+    return; 
+  } 
+  s.style.display='block';
+
+  const series=currentTraining.length; 
+  const hits=currentTraining.reduce((a,c)=>a+c.hit,0); 
+  const throws=currentTraining.reduce((a,c)=>a+c.throws,0);
   const rate=throws>0?Math.round((hits/throws)*100):0;
   document.getElementById('series-count').textContent=series;
   document.getElementById('total-hit').textContent=hits;
   document.getElementById('total-throws').textContent=throws;
   document.getElementById('success-rate').textContent=rate;
+
+  // 🔄 pokud je detail rozbalený, aktualizuj jeho obsah
+  const det = document.getElementById('series-detail');
+  if (det){
+    const lines = currentTraining.map((s,i)=>{
+      const acc = s.throws>0 ? Math.round((s.hit/s.throws)*100) : 0;
+      return `${i+1}) ${s.hit}/${s.throws} → ${acc}%`;
+    }).join('<br>');
+    det.innerHTML = `<strong>Detail sérií:</strong><br>${lines}`;
+  }
 }
+
+// Klik na souhrn = zobrazí / skryje seznam sérií
+document.getElementById('current-training-summary')?.addEventListener('click', () => {
+  const existing = document.getElementById('series-detail');
+  if (existing) { 
+    existing.remove(); 
+    return; 
+  }
+  if (!currentTraining.length) return;
+
+  const det = document.createElement('div');
+  det.id = 'series-detail';
+  det.className = 'series-detail';
+
+  const lines = currentTraining.map((s,i)=>{
+    const acc = s.throws>0 ? Math.round((s.hit/s.throws)*100) : 0;
+    return `${i+1}) ${s.hit}/${s.throws} → ${acc}%`;
+  }).join('<br>');
+
+  det.innerHTML = `<strong>Detail sérií:</strong><br>${lines}`;
+  document.getElementById('current-training-summary').appendChild(det);
+});
+
+// Vrácení poslední série
 document.getElementById('undo-last-series-btn').onclick=()=>{
-  if (currentMode!=='8m') return; if (currentTraining.length===0){ alert('Žádná série k vrácení.'); return; }
-  currentTraining.pop(); updateCurrentTrainingSummary();
+  if (currentMode!=='8m') return; 
+  if (currentTraining.length===0){ 
+    alert('Žádná série k vrácení.'); 
+    return; 
+  }
+  currentTraining.pop(); 
+  updateCurrentTrainingSummary();
 };
+
+// Ukončení tréninku
 document.getElementById('end-training-btn').onclick=()=>{
-  if (currentMode!=='8m') return; if (!currentUser){ alert('Vyber uživatele.'); return; }
+  if (currentMode!=='8m') return; 
+  if (!currentUser){ alert('Vyber uživatele.'); return; }
   if (currentTraining.length===0){ alert('Trénink je prázdný.'); return; }
   progressStart();
-  const users=loadUsers(); const idx=users.findIndex(u=>u.name===currentUser);
+  const users=loadUsers(); 
+  const idx=users.findIndex(u=>u.name===currentUser);
   if (idx===-1){ alert('Uživatel nenalezen.'); progressFinish(); return; }
-  const totalHit=currentTraining.reduce((a,c)=>a+c.hit,0); const totalThrows=currentTraining.reduce((a,c)=>a+c.throws,0);
+  const totalHit=currentTraining.reduce((a,c)=>a+c.hit,0); 
+  const totalThrows=currentTraining.reduce((a,c)=>a+c.throws,0);
   const successRate=totalThrows>0?Math.round((totalHit/totalThrows)*100):0;
-  users[idx].history.push({type:'8m', date:new Date().toISOString(), training:currentTraining, totalHit, totalThrows, successRate});
-  saveUsers(users); currentTraining=[]; updateCurrentTrainingSummary(); renderHistoryPreview(currentUser); renderStats(currentUser); showToast('Trénink uložen ✅'); progressFinish();
+  users[idx].history.push({
+    type:'8m', 
+    date:new Date().toISOString(), 
+    training:currentTraining, 
+    totalHit, 
+    totalThrows, 
+    successRate
+  });
+  saveUsers(users); 
+  currentTraining=[]; 
+  updateCurrentTrainingSummary(); 
+  renderHistoryPreview(currentUser); 
+  renderStats(currentUser); 
+  showToast('Trénink uložen ✅'); 
+  progressFinish();
 };
 
 // ====== 8+2 SUBMODE ======
