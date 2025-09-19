@@ -157,47 +157,159 @@ button, .hit-btn{ position: relative; overflow: hidden; cursor:pointer; }
   box-shadow: 0 2px 10px rgba(0,0,0,.04) inset;
 }
 
-/* === Průběh aktuálního tréninku (8m) === */
-#current-training-progress{
-  background: linear-gradient(180deg, #f3fdff, #ecfbff);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  padding: .65rem .75rem;
-  margin-top: .6rem;
+/* history section */
+.history-preview{
+  background: #f1fbff;
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--accent-2);
+  border-radius: var(--radius-sm);
+  padding: .62rem .78rem;
+}
+.history-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap: wrap; margin-top:.6rem; }
+.flex-spacer{ margin-left: auto; }
+.btn-nowrap{ white-space: nowrap; }
+@media (max-width: 420px){
+  .history-actions .flex-spacer{ display:none; }
+  .history-actions button{ flex:1 1 auto; min-width:0; font-size:.95rem; padding:.48rem .6rem; }
 }
 
-.progress-header{
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom: .35rem;
+/* segmented */
+.seg{
+  display:inline-flex; border:1px solid var(--border);
+  border-radius: 999px; overflow:hidden; background:#fff;
+}
+.seg-btn{
+  background:#fff; border:none; padding:.32rem .75rem; cursor:pointer;
+  transition: background var(--trans);
+}
+.seg-btn:not(.active):hover{ background:#eef7ff; }
+.seg-btn.active{ background:#d7eef7; font-weight:800; color:#073b74; }
+
+/* STAT CARDS */
+.stat-grid{ display:grid; grid-template-columns: 1fr; gap:1rem; }
+@media (min-width: 580px){ .stat-grid{ grid-template-columns: 1fr 1fr; } }
+.stat-card{
+  background:#fff; border:1px solid var(--border); border-radius: var(--radius);
+  padding: .9rem; box-shadow: var(--shadow);
+}
+.stat-card h3{ margin:0 0 .35rem; color:#0b4ea9; letter-spacing:.2px; }
+.stat-row{ display:flex; justify-content:space-between; margin:.18rem 0; }
+.stat-key{ opacity:.72; }
+
+/* ===== ADAPTIVNÍ MINI GRAFY (používá script.js) ===== */
+.mbox{ position:relative; margin-top:.25rem; }
+.mbars{ display:flex; align-items:flex-end; gap:4px; height:56px; margin-top:1rem; }
+.mbar{
+  width: 8px; min-width: 8px;
+  background: var(--accent-2);
+  border-radius: 3px 3px 0 0;
+  transition: height .2s ease, opacity .2s ease, transform .1s ease;
+  height: 12px;
+}
+.mbar:hover{ opacity: .95; transform: translateY(-1px); }
+.mbase{ position:absolute; left:0; right:0; border-top:2px dashed rgba(0,0,0,.25); }
+.mbase-label{ position:absolute; right:0; top:-18px; font-size:.85rem; opacity:.72; }
+
+/* starší varianta grafu (ponechána pro kompatibilitu, nevadí když zůstane) */
+.chart{
+  --bar-color: #0ea5a5;
+  height: 110px;
+  display:flex; align-items:flex-end; gap:5px; position:relative; margin-top:.45rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.bar{
+  width: 12px; min-width:12px;
+  background: var(--bar-color);
+  opacity:.75;
+  border-radius: 4px 4px 0 0;
+  transition: height .2s ease, opacity .2s ease, transform .1s ease;
+  height: 20px;
+}
+.bar:hover{ opacity: 1; transform: translateY(-1px); }
+.bar.last{ width: 16px; opacity: 1; }
+.bar.dnf{
+  background: repeating-linear-gradient(-45deg, #cbd5e1, #cbd5e1 5px, #e2e8f0 5px, #e2e8f0 10px);
+  opacity:.9;
+}
+.chart-label{
+  position:absolute; right:0; top:-2px; transform: translateY(-100%);
+  background:#0b4ea9; color:#fff; padding:.18rem .45rem; border-radius:8px;
+  font-size:.85rem; box-shadow: 0 6px 16px rgba(11,78,169,.25);
+}
+.chart-label small{ opacity:.9; }
+
+/* ===== HISTORIE – MODAL & KARTY ===== */
+.modal{ position:fixed; inset:0; display:none; z-index:1500; }
+.modal.show{ display:block; }
+.modal-backdrop{ position:absolute; inset:0; background: rgba(12,44,82,.42); backdrop-filter: blur(1px); }
+.modal-dialog{
+  position:absolute; left:50%; top:50%; transform: translate(-50%, -50%);
+  width:min(720px, 94vw); height:min(92vh, 720px);
+  background:#fff; border-radius: 18px; box-shadow: 0 28px 64px rgba(12,44,82,.3);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.sticky{ position: sticky; top: 0; z-index: 5; }
+.sticky-bottom{ position: sticky; bottom: 0; z-index: 5; }
+.modal-header, .modal-toolbar, .modal-footer{
+  padding:.85rem 1rem; background:#f6fbff; border-bottom:1px solid var(--border);
+}
+.modal-footer{ border-top:1px solid var(--border); border-bottom:none; display:flex; justify-content:space-between; align-items:center; }
+.modal-toolbar{ display:flex; gap:.5rem; align-items:center; }
+.modal-header{ display:flex; justify-content:space-between; align-items:center; }
+.modal-body{ padding:.95rem 1rem; overflow:auto; background:#fff; }
+
+/* full-screen na menších mobilech */
+@media (max-width: 640px){
+  .modal-dialog{
+    width:100vw; height:100vh; border-radius: 0;
+  }
 }
 
-.progress-list{
-  display:flex; flex-direction:column; gap:.28rem;
-  max-height:180px; overflow:auto;
+/* Chips (rychlé filtry) */
+.chip-group{ display:flex; gap:.4rem; }
+.chip{
+  border:1px solid var(--border); background:#fff; border-radius:999px; padding:.28rem .6rem;
+  font-size:.95rem;
 }
+.chip.active{ background:#d7eef7; border-color:#bfe4ee; }
 
-.progress-row{
-  display:grid;
-  grid-template-columns: auto 2.2rem .5rem 2.2rem auto auto;
-  align-items:center; gap:.35rem;
-  padding: .28rem .4rem;
+/* Karty záznamů – názvy, které používá script.js */
+.hist-card{
+  padding:.6rem .75rem;
   border:1px solid var(--border);
-  border-radius: 10px;
+  border-radius:12px;
+  margin:.45rem 0;
   background:#fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
+.row-top{ display:flex; align-items:center; gap:.6rem; }
+.row-top .mode-ico{ font-size:1.1rem; }
+.row-top .main-val{ font-weight:800; letter-spacing:.2px; }
+.row-top .date{ margin-left:auto; color: var(--muted); font-size:.9rem; }
+.row-sub{ margin-top:.2rem; color:#475569; font-size:.95rem; display:flex; gap:.7rem; flex-wrap:wrap; }
 
-.progress-row .pr-label{ color:#64748b; }
-.progress-row .pr-hit{ font-weight:800; color:#065f46; }
-.progress-row .pr-throws{ font-weight:700; color:#1f2937; opacity:.9; }
-.progress-row .pr-acc{ margin-left:.25rem; font-weight:700; opacity:.9; }
-.progress-row .pr-time{ margin-left:auto; color:#64748b; font-size:.9rem; }
-
-@media (prefers-color-scheme: dark){
-  #current-training-progress{ background: var(--card); border-color: var(--border); }
-  .progress-row{ background:#0f172a; }
+/* Alternativní (kdybys někde používal) */
+.h-item{
+  border:1px solid var(--border); border-radius:12px; padding:.65rem .7rem;
+  margin:.45rem 0; box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
+.h-top{ display:flex; align-items:center; gap:.6rem; }
+.h-ico{ font-size: 1.15rem; }
+.h-title{ font-weight:700; }
+.h-date{ margin-left:auto; color: var(--muted); font-size:.92rem; }
+.h-sub{ margin-top:.25rem; color:#475569; font-size:.95rem; display:flex; gap:.7rem; flex-wrap:wrap; }
 
-/* ... (další CSS pro historii, grafy, modal atd. – beze změny) ... */
+.badge{
+  display:inline-block; border-radius:999px; padding:.12rem .5rem; font-size:.85rem; border:1px solid var(--border);
+}
+.badge.g{ background:#e8fff5; color:#065f46; }  /* green */
+.badge.b{ background:#eef4ff; color:#1e3a8a; }  /* blue */
+.badge.o{ background:#fff7ed; color:#7c2d12; }  /* orange */
+.badge.dnf{ background:#fff1f2; color:#9f1239; }
+
+/* klik feedback */
+.hist-card:active{ transform: scale(.998); transition: transform .06s ease; }
 
 /* cache badge */
 #cache-version{
@@ -206,4 +318,104 @@ button, .hit-btn{ position: relative; overflow: hidden; cursor:pointer; }
   border-radius: 10px; padding:.38rem .62rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size:.9rem; opacity:.92; box-shadow: 0 8px 20px rgba(11,78,169,.28);
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1220; --card:#0f172a; --ink:#e6edf7; --border:#1e2a44;
+    --brand:#82b4ff; --brand-ink:#0b1220;
+    --accent:#5eead4; --accent-2:#a7fff3; --accent-3:#0b2830;
+    --shadow: 0 12px 30px rgba(0,0,0,.45);
+    --muted:#9aa5b6;
+  }
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% -220px, #08121f 0%, var(--bg) 55%),
+      linear-gradient(180deg, #0b1220 0%, #0b1220 100%);
+  }
+  #user-list div, .history-preview, #history-list div{ background:#0f1d2e; }
+  .seg{ background:#0b1220; }
+  .seg-btn{ color: var(--ink); }
+  .modal-header, .modal-toolbar, .modal-footer{ background:#0b1220; }
+  .bar.dnf{ background: repeating-linear-gradient(-45deg, #334155, #334155 5px, #1f2937 5px, #1f2937 10px); }
+  .mbase{ border-top-color: rgba(255,255,255,.28); }
+  .mbase-label{ opacity:.85; }
+  .hist-card{ background:#0f172a; box-shadow:none; }
+}
+/* === Fix grafů: ohraničení, prostor pro popisky, vodorovný scroll === */
+.stat-card{ overflow: hidden; }
+
+.mbox{
+  position: relative;
+  padding-top: 22px;   /* místo pro Δ a Ø štítky nahoře */
+  margin: .25rem 0 .6rem;
+  overflow: hidden;    /* nic neuteče ven */
+}
+
+.mbars{
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;        /* o trochu vyšší pro baseline */
+  width: 100%;
+  overflow-x: auto;    /* pokud je moc sloupců, dá se posunout do strany */
+  overflow-y: hidden;
+  padding: 0 2px;      /* neukrojit sloupky na krajích */
+  box-sizing: border-box;
+  scrollbar-width: thin;
+}
+
+.mbar{
+  flex: 0 0 auto;      /* sloupky se neshrnou, drží šířku */
+  width: 8px; min-width: 8px;
+}
+
+.mbar.last{ width: 12px; min-width: 12px; }
+
+/* Baseline a její štítek jsou uvnitř bar boxu, takže nepřetékají */
+.mbase{
+  position: absolute;
+  left: 0; right: 0;
+  height: 0;
+  border-top: 2px dashed rgba(0,0,0,.25);
+  pointer-events: none;
+}
+
+.mbase-label{
+  position: absolute;
+  right: 4px; top: 0;
+  transform: translateY(-100%);
+  font-size: .85rem;
+  opacity: .72;
+  pointer-events: none;
+}
+
+/* Dark mode kontrast baseline */
+@media (prefers-color-scheme: dark){
+  .mbase{ border-top-color: rgba(255,255,255,.28); }
+}
+/* DISTRIBUCE Unlimited */
+.chart-unlimited {
+  height: 80px;                /* menší než u Classic */
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  position: relative;
+  margin-top: .45rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.chart-unlimited .bar {
+  flex: 1 1 auto;              /* rovnoměrné rozložení */
+  min-width: 10px;
+  background: var(--accent-2); /* jemnější barva */
+  border-radius: 3px 3px 0 0;
+  opacity: .85;
+  transition: height .2s ease, opacity .2s ease;
+}
+
+.chart-unlimited .bar:hover {
+  opacity: 1;
 }
