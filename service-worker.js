@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.06';
+const CACHE_VERSION = 'v1.05';
 const CACHE_NAME = `kubb-cache-${CACHE_VERSION}`;
 const FILES_TO_CACHE = [
   './',
