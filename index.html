@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Kubb Tracker v1.05</title>
+  <title>Kubb Tracker v1.06</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -83,6 +83,15 @@
           Úspěšnost: <span id="success-rate">0</span>%
         </div>
       </div>
+	<!-- PRŮBĚH AKTUÁLNÍHO TRÉNINKU (8m) -->
+	<div id="current-training-progress" style="display:none;" aria-live="polite">
+	  <div class="progress-header">
+	    <strong>Průběh (série 8m):</strong>
+	    <span id="progress-info" class="muted"></span>
+  	</div>
+  	<div id="progress-list" class="progress-list"></div>
+</div>
+
 
       <!-- ===== Režim 8+2 ===== -->
       <div id="mode-82" style="display:none;">
@@ -211,7 +220,10 @@
       </div>
     </div>
   </div>
-
+<footer>
+  <div id="toast-container" aria-live="polite"></div>
+  <small id="cache-version" style="opacity:.6;"></small>
+</footer>
   <!-- Skript -->
   <script src="script.js"></script>
 </body>

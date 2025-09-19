@@ -1,10 +1,11 @@
 // ======================
-// Kubb Tracker v1.05 (script.js)
-// 8m MA5 trend + kliky; 8+2 distribuce = full-width GRID (bez horizontálního scrollu, vyvážená výška)
+// Kubb Tracker v1.06 (script.js)
+// Nové: Průběh aktuálního tréninku (8m) – řádky se sériemi (hit/throws, % a čas)
+// 8m MA5 trend + kliky; 8+2 distribuce = full-width GRID
 // ======================
 
 // --- Service Worker badge (info) ---
-const CACHE_VERSION = 'v1.05';
+const CACHE_VERSION = 'v1.06';
 document.addEventListener('DOMContentLoaded', () => {
   const badge = document.getElementById('cache-version');
   if (badge) badge.textContent = `Cache verze: ${CACHE_VERSION}`;
@@ -170,7 +171,7 @@ function renderUserList(){
     name.onclick=()=>{
       if (currentTraining.length>0){
         if (!confirm('Probíhá trénink. Opravdu přepnout uživatele?')) return;
-        currentTraining=[]; updateCurrentTrainingSummary(); document.getElementById('current-training-summary').style.display='none';
+        currentTraining=[]; refreshCurrent8mView(); document.getElementById('current-training-summary').style.display='none';
       }
       currentUser=user.name; document.getElementById('current-user-name').textContent=currentUser;
       renderHistoryPreview(currentUser); renderStats(currentUser); resetThrowsInput();
@@ -180,7 +181,13 @@ function renderUserList(){
       e.stopPropagation();
       if (confirm(`Smazat uživatele "${user.name}"?`)){
         users.splice(index,1); saveUsers(users); renderUserList();
-        if (currentUser===user.name){ currentUser=null; document.getElementById('current-user-name').textContent='žádný'; currentTraining=[]; updateCurrentTrainingSummary(); document.getElementById('current-training-summary').style.display='none'; clearHistoryPreview(); clearStatsView(); }
+        if (currentUser===user.name){
+          currentUser=null; document.getElementById('current-user-name').textContent='žádný';
+          currentTraining=[]; refreshCurrent8mView();
+          const s = document.getElementById('current-training-summary'); if (s) s.style.display='none';
+          const p = document.getElementById('current-training-progress'); if (p) p.style.display='none';
+          clearHistoryPreview(); clearStatsView();
+        }
       }
     };
     row.appendChild(name); row.appendChild(del); list.appendChild(row);
@@ -212,24 +219,76 @@ hitButtons.forEach(btn=>{
     let tInput=document.getElementById('throws-input'); let throws=parseInt(tInput.value,10);
     if (isNaN(throws)||throws<1){ throws=6; tInput.value=6; } if (throws>6){ throws=6; tInput.value=6; }
     currentTraining.push({hit:selectedHits, throws, timestamp:new Date().toISOString()});
-    updateCurrentTrainingSummary(); resetThrowsInput(); hitButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected');
+    refreshCurrent8mView();
+    resetThrowsInput();
+    hitButtons.forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
   };
 });
 function resetThrowsInput(){ const t=document.getElementById('throws-input'); if (t) t.value=6; }
 function updateCurrentTrainingSummary(){
   const s=document.getElementById('current-training-summary');
+  if (!s) return;
   if (currentTraining.length===0){ s.style.display='none'; return; } s.style.display='block';
   const series=currentTraining.length; const hits=currentTraining.reduce((a,c)=>a+c.hit,0); const throws=currentTraining.reduce((a,c)=>a+c.throws,0);
   const rate=throws>0?Math.round((hits/throws)*100):0;
-  document.getElementById('series-count').textContent=series;
-  document.getElementById('total-hit').textContent=hits;
-  document.getElementById('total-throws').textContent=throws;
-  document.getElementById('success-rate').textContent=rate;
+  document.getElementById('series-count')?.textContent = series;
+  document.getElementById('total-hit')?.textContent   = hits;
+  document.getElementById('total-throws')?.textContent= throws;
+  document.getElementById('success-rate')?.textContent= rate;
 }
+
+// === NOVÉ: PRŮBĚH AKTUÁLNÍHO TRÉNINKU (8m) ===
+function renderCurrentTrainingProgress() {
+  const box = document.getElementById('current-training-progress');
+  const list = document.getElementById('progress-list');
+  const info = document.getElementById('progress-info');
+
+  // Pokud v HTML box není, nic se neděje (kompatibilní)
+  if (!box || !list) return;
+
+  if (!currentTraining.length) {
+    box.style.display = 'none';
+    list.innerHTML = '';
+    if (info) info.textContent = '';
+    return;
+  }
+
+  box.style.display = 'block';
+  list.innerHTML = '';
+
+  let cumHit = 0, cumThrows = 0;
+  currentTraining.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'progress-row';
+    const acc = s.throws > 0 ? Math.round((s.hit / s.throws) * 100) : 0;
+    cumHit += s.hit || 0;
+    cumThrows += s.throws || 0;
+
+    row.innerHTML = `
+      <span class="pr-label">${i + 1})</span>
+      <span class="pr-hit">${s.hit}</span><span class="pr-sep">/</span><span class="pr-throws">${s.throws}</span>
+      <span class="pr-acc">${acc}%</span>
+      <span class="pr-time">${new Date(s.timestamp || Date.now()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+    `;
+    list.appendChild(row);
+  });
+
+  const totalAcc = cumThrows > 0 ? Math.round((cumHit / cumThrows) * 100) : 0;
+  if (info) info.textContent = `Součet: ${cumHit}/${cumThrows} → ${totalAcc}%`;
+}
+
+// Helper: aktualizuj souhrn + průběh najednou
+function refreshCurrent8mView() {
+  updateCurrentTrainingSummary();
+  renderCurrentTrainingProgress();
+}
+
 document.getElementById('undo-last-series-btn').onclick=()=>{
   if (currentMode!=='8m') return; if (currentTraining.length===0){ alert('Žádná série k vrácení.'); return; }
-  currentTraining.pop(); updateCurrentTrainingSummary();
+  currentTraining.pop(); refreshCurrent8mView();
 };
+
 document.getElementById('end-training-btn').onclick=()=>{
   if (currentMode!=='8m') return; if (!currentUser){ alert('Vyber uživatele.'); return; }
   if (currentTraining.length===0){ alert('Trénink je prázdný.'); return; }
@@ -239,7 +298,7 @@ document.getElementById('end-training-btn').onclick=()=>{
   const totalHit=currentTraining.reduce((a,c)=>a+c.hit,0); const totalThrows=currentTraining.reduce((a,c)=>a+c.throws,0);
   const successRate=totalThrows>0?Math.round((totalHit/totalThrows)*100):0;
   users[idx].history.push({type:'8m', date:new Date().toISOString(), training:currentTraining, totalHit, totalThrows, successRate});
-  saveUsers(users); currentTraining=[]; updateCurrentTrainingSummary(); renderHistoryPreview(currentUser); renderStats(currentUser); showToast('Trénink uložen ✅'); progressFinish();
+  saveUsers(users); currentTraining=[]; refreshCurrent8mView(); renderHistoryPreview(currentUser); renderStats(currentUser); showToast('Trénink uložen ✅'); progressFinish();
 };
 
 // ====== 8+2 SUBMODE ======
@@ -277,7 +336,7 @@ const m82UnlPinsSelect = document.getElementById('m82-unl-pins');
 const m82UnlSaveBtn    = document.getElementById('m82-unl-save');
 const m82UnlDNFBtn     = document.getElementById('m82-unl-dnf');
 (function fillUnlSelect(){ if(!m82UnlPinsSelect) return; m82UnlPinsSelect.innerHTML=''; for(let p=4;p<=20;p++){ const opt=document.createElement('option'); opt.value=String(p); opt.textContent=String(p); m82UnlPinsSelect.appendChild(opt);} })();
-m82UnlSaveBtn.addEventListener('click', ()=>{
+m82UnlSaveBtn?.addEventListener('click', ()=>{
   if (!currentUser){ alert('Vyber nejdříve uživatele.'); return; }
   if (currentMode!=='8+2' || m82Submode!=='unlimited') return;
   progressStart();
@@ -288,7 +347,7 @@ m82UnlSaveBtn.addEventListener('click', ()=>{
   if (!users[idx].history) users[idx].history=[]; users[idx].history.push(entry); saveUsers(users);
   renderHistoryPreview(currentUser); renderStats(currentUser); showToast('Záznam uložen ✅'); progressFinish();
 });
-m82UnlDNFBtn.addEventListener('click', ()=>{
+m82UnlDNFBtn?.addEventListener('click', ()=>{
   if (!currentUser){ alert('Vyber nejdříve uživatele.'); return; }
   if (currentMode!=='8+2' || m82Submode!=='unlimited') return;
   if (!confirm('Opravdu uložit DNF pro tuto sérii?')) return;
@@ -461,9 +520,7 @@ function computeStats(history){
 
   const v10Vals=[]; const v11Vals=[]; const v11Trend=[];
   const pinsVals=[]; const pinsTrend=[];
-
   const hSorted = history.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-
   let totalHits=0,totalThrows=0;
 
   hSorted.forEach(e=>{

@@ -419,3 +419,42 @@ button, .hit-btn{ position: relative; overflow: hidden; cursor:pointer; }
 .chart-unlimited .bar:hover {
   opacity: 1;
 }
+/* === Průběh aktuálního tréninku (8m) === */
+#current-training-progress{
+  background: linear-gradient(180deg, #f3fdff, #ecfbff);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: .65rem .75rem;
+  margin-top: .6rem;
+}
+
+.progress-header{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom: .35rem;
+}
+
+.progress-list{
+  display:flex; flex-direction:column; gap:.28rem;
+  max-height:180px; overflow:auto;
+}
+
+.progress-row{
+  display:grid;
+  grid-template-columns: auto 2.2rem .5rem 2.2rem auto auto;
+  align-items:center; gap:.35rem;
+  padding: .28rem .4rem;
+  border:1px solid var(--border);
+  border-radius: 10px;
+  background:#fff;
+}
+
+.progress-row .pr-label{ color:#64748b; }
+.progress-row .pr-hit{ font-weight:800; color:#065f46; }
+.progress-row .pr-throws{ font-weight:700; color:#1f2937; opacity:.9; }
+.progress-row .pr-acc{ margin-left:.25rem; font-weight:700; opacity:.9; }
+.progress-row .pr-time{ margin-left:auto; color:#64748b; font-size:.9rem; }
+
+@media (prefers-color-scheme: dark){
+  #current-training-progress{ background: var(--card); border-color: var(--border); }
+  .progress-row{ background:#0f172a; }
+}
